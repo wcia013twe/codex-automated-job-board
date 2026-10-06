@@ -8,4 +8,5 @@
 - Valid priorities: `Apply Now`, `Strong Consider`, `Skip Unless Team Fit`. Valid types: `FT`, `Internship`.
 - Set `postedDate` to `null` if the source does not disclose it. Do not invent dates. Record result recency in `sourceFreshness` and label anything older than 72 hours in that field.
 - Use SimplifyJobs’ Summer 2027 Internships list and HiringCafe as lead sources. Treat both as discovery inputs only: verify availability, job details, and the canonical application URL on the employer or ATS page before recording a role.
+- When a company has both internship and new-grad roles, do not automatically recommend both. Prefer the internship when full-time entry is substantially harder and the internship offers a strong conversion path or uniquely valuable specialization. Prefer full-time when the new-grad role is realistically attainable and an internship would not justify delaying graduation. Include both only when each independently clears its own bar.
 - Run `npm run validate:data` before committing. Commit and push only the relevant dashboard/data changes.
