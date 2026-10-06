@@ -1,6 +1,19 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Job Signal Board</title><link rel="stylesheet" href="styles.css"></head>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0e1116">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Job Signal">
+    <meta name="description" content="A selective U.S. software engineering job tracker.">
+    <title>Job Signal Board</title>
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="styles.css">
+  </head>
   <body>
     <main>
       <header><div><p class="eyebrow">US SOFTWARE ENGINEERING</p><h1>Job signal board</h1><p class="subhead">A selective inbox for systems, data, ML infrastructure, and high-leverage roles.</p></div><p id="updated"></p></header>
@@ -8,6 +21,8 @@
       <div class="tabs" role="tablist" aria-label="Job dashboard"><button role="tab" aria-selected="true" aria-controls="daily-board">Daily Board</button><button role="tab" aria-selected="false" aria-controls="auto-tracker">Auto Tracker</button></div>
       <section id="daily-board" role="tabpanel"><p class="panel-note">Roles discovered in the current run. Older source results are labeled so freshness is never implied.</p><div id="board" class="grid"></div></section>
       <section id="auto-tracker" role="tabpanel" hidden><p class="panel-note">Persistent role history. Status changes are kept locally in your browser and never overwritten by refreshes.</p><div id="tracker" class="grid"></div></section>
-    </main><script src="app.js"></script>
+    </main>
+    <script src="app.js"></script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');</script>
   </body>
 </html>
