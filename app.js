@@ -4,6 +4,7 @@ const summary = document.querySelector('#summary');
 const search = document.querySelector('#search');
 const typeFilter = document.querySelector('#type-filter');
 let roles = [];
+let currentRunDate = '';
 const companyDomains = {
   'DoorDash': 'doordash.com',
   'Render': 'render.com',
@@ -39,7 +40,7 @@ function render() {
   const type = typeFilter.value;
   const matches = (role) => (!type || role.employmentType === type) && `${role.company} ${role.title} ${role.category} ${role.location}`.toLowerCase().includes(needle);
   const tracked = trackedIds();
-  const dailyRoles = roles.filter((role) => matches(role) && !tracked.has(role.id));
+  const dailyRoles = roles.filter((role) => matches(role) && role.discoveredDate === currentRunDate && !tracked.has(role.id));
   const trackedRoles = roles.filter((role) => matches(role) && tracked.has(role.id));
   const applyNow = dailyRoles.filter((role) => role.priority === 'Apply Now').length;
   summary.textContent = `${dailyRoles.length} to review · ${applyNow} apply now`;
@@ -71,6 +72,7 @@ board.addEventListener('click', (event) => {
 
 fetch('./data/jobs.json').then((response) => response.json()).then((data) => {
   roles = data.roles.map((role) => ({ ...role, applicationStatus: localStorage.getItem(`status:${role.id}`) || role.applicationStatus }));
+  currentRunDate = data.lastRun;
   document.querySelector('#updated').textContent = `Last scan: ${data.lastRun}`;
   render();
 });

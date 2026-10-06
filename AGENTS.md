@@ -2,9 +2,10 @@
 
 - `data/jobs.json` is the source of truth. Update data before touching the UI.
 - On the first run, build the two-tab UI only if it is absent. Later runs should normally only update `data/jobs.json`.
-- `Daily Board` is the set of roles whose `discoveredDate` is today. `Auto Tracker` is the complete deduplicated history.
+- `Daily Board` shows only roles whose `discoveredDate` matches `lastRun` and which have not been opened by the user. `Auto Tracker` is client-side and receives a role only after the user opens its application link. Automation runs should update `data/jobs.json`, not pre-populate Auto Tracker.
 - Deduplicate by canonical application URL and then by normalized company/title/location.
 - Preserve every existing `applicationStatus`; only new records start as `New`.
 - Valid priorities: `Apply Now`, `Strong Consider`, `Skip Unless Team Fit`. Valid types: `FT`, `Internship`.
 - Set `postedDate` to `null` if the source does not disclose it. Do not invent dates. Record result recency in `sourceFreshness` and label anything older than 72 hours in that field.
+- Use SimplifyJobs’ Summer 2027 Internships list and HiringCafe as lead sources. Treat both as discovery inputs only: verify availability, job details, and the canonical application URL on the employer or ATS page before recording a role.
 - Run `npm run validate:data` before committing. Commit and push only the relevant dashboard/data changes.
