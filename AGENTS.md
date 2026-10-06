@@ -4,7 +4,7 @@
 - On the first run, build the two-tab UI only if it is absent. Later runs should normally only update `data/jobs.json`.
 - `Daily Board` shows only roles whose `discoveredDate` matches `lastRun` and which have not been opened by the user. Split it into a full-time grid followed by an internship grid. `Auto Tracker` is client-side and receives a role only after the user opens its application link. Automation runs should update `data/jobs.json`, not pre-populate Auto Tracker.
 - Auto Tracker should remain a compact row view with company, job title, type, date opened/applied, status, and separate full-time and internship counters.
-- Aim for up to 15 full-time roles and up to 15 internships per run. These are discovery targets, not an acceptance filter: quality wins when sources do not support the counts.
+- Aim for up to 20 full-time roles and up to 10 internships per run. These are discovery targets, not an acceptance filter: quality wins when sources do not support the counts.
 - Deduplicate by canonical application URL and then by normalized company/title/location.
 - Preserve every existing `applicationStatus`; only new records start as `New`.
 - Valid priorities: `Apply Now`, `Strong Consider`, `Skip Unless Team Fit`. Valid types: `FT`, `Internship`.
