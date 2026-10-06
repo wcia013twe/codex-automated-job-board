@@ -13,7 +13,10 @@ const companyDomains = {
   'Cohere': 'cohere.com',
   'DatologyAI': 'datologyai.com',
   'Lambda': 'lambda.ai',
-  'Pulse': 'pulse.com'
+  'Pulse': 'pulse.com',
+  'Together AI': 'together.ai',
+  'SingleStore': 'singlestore.com',
+  'Freeform': 'freeform.co'
 };
 const trackerKey = 'job-signal-tracker-ids';
 const trackedIds = () => new Set(JSON.parse(localStorage.getItem(trackerKey) || '[]'));
