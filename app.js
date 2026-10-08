@@ -1,3 +1,9 @@
+/* Job Signal Board — app logic. Rendering is done by the reusable Web
+   Components in components.js (window.JB). Presentation only: data files
+   and all collected descriptions/analysis are never modified here. */
+const escapeHtml = JB.esc;
+const refreshHud = () => document.dispatchEvent(new Event('jb:hud'));
+
 const fullTimeGrid = document.querySelector('#full-time-grid');
 const internshipGrid = document.querySelector('#internship-grid');
 const tracker = document.querySelector('#tracker');
@@ -7,40 +13,49 @@ const search = document.querySelector('#search');
 const typeFilter = document.querySelector('#type-filter');
 let roles = [];
 let currentRunDate = '';
-let logoManifest = {};
 const trackerKey = 'job-signal-tracker-ids';
 const trackedIds = () => new Set(JSON.parse(localStorage.getItem(trackerKey) || '[]'));
 const saveTrackedIds = (ids) => localStorage.setItem(trackerKey, JSON.stringify([...ids]));
-const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
-const date = (value) => value || 'Not listed';
 const appliedDate = (id) => localStorage.getItem(`applied-date:${id}`) || 'Not applied';
-const freshness = (role) => role.sourceFreshness ? `<span class="freshness">Source freshness: ${escapeHtml(role.sourceFreshness)}</span>` : '';
-const normCompany = (name) => String(name).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]+/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
-function logoHtml(company, cls) {
-  const path = logoManifest[normCompany(company)];
-  if (path) return `<img class="${cls}" src="${escapeHtml(path)}" alt="${escapeHtml(company)} logo" loading="lazy" onerror="this.outerHTML='<span class=&quot;${cls} logo-fallback&quot; aria-hidden=&quot;true&quot;>${escapeHtml((String(company).trim()[0] || '?').toUpperCase())}</span>'">`;
-  const initial = (String(company).trim()[0] || '?').toUpperCase();
-  return `<span class="${cls} logo-fallback" aria-hidden="true">${escapeHtml(initial)}</span>`;
-}
 
-function roleCard(role) {
-  return `<article class="role-card">
-    <div class="role-head"><div class="company-line">${logoHtml(role.company, 'company-logo')}<div><p class="eyebrow">${escapeHtml(role.employmentType)} · ${escapeHtml(role.category)}</p><h3>${escapeHtml(role.title)}</h3><p class="company">${escapeHtml(role.company)} <span>·</span> ${escapeHtml(role.location)}</p></div></div><div class="head-badges">${rarityBadge(role.company)}${shinyBadge(role.whyItFits)}<span class="priority ${role.priority.toLowerCase().replaceAll(' ', '-')}">${escapeHtml(role.priority)}</span></div></div>
-    <p>${escapeHtml(role.whyItFits)}</p>
-    <div class="meta"><span>Posted: ${date(role.postedDate)}</span><span>Discovered: ${role.discoveredDate}</span>${freshness(role)}</div>
-    <a href="${escapeHtml(role.applicationUrl)}" target="_blank" rel="noreferrer" data-track-role="${escapeHtml(role.id)}">Open application</a>
-  </article>`;
+const TRACKER_STATUSES = ['New', 'Applied', 'OA', 'Phone Screen', 'Interview', 'Onsite', 'Offer', 'Rejected', 'Withdrawn'];
+
+function roleCardEl(role) {
+  const el = document.createElement('role-card');
+  el.setAttribute('company', role.company || '');
+  el.setAttribute('title', role.title || '');
+  el.setAttribute('location', role.location || '');
+  el.setAttribute('emptype', role.employmentType || '');
+  el.setAttribute('category', role.category || '');
+  el.setAttribute('priority', role.priority || '');
+  el.setAttribute('posted', role.postedDate || 'Not listed');
+  el.setAttribute('discovered', role.discoveredDate || '');
+  el.setAttribute('freshness', role.sourceFreshness || '');
+  el.setAttribute('rationale', role.whyItFits || '');
+  el.setAttribute('url', role.applicationUrl || '');
+  el.setAttribute('role-id', role.id || '');
+  return el;
 }
 
 function trackerRow(role) {
   const status = role.applicationStatus;
+  const opts = TRACKER_STATUSES.map((s) => `<option${s === status ? ' selected' : ''}>${s}</option>`).join('');
   return `<div class="tracker-row" role="row">
     <strong>${escapeHtml(role.company)}</strong>
     <a href="${escapeHtml(role.applicationUrl)}" target="_blank" rel="noreferrer">${escapeHtml(role.title)}</a>
     <span>${escapeHtml(role.employmentType)}</span>
     <span>${appliedDate(role.id)}</span>
-    <select aria-label="Status for ${escapeHtml(role.title)}" data-id="${escapeHtml(role.id)}"><option ${status === 'New' ? 'selected' : ''}>New</option><option ${status === 'Applied' ? 'selected' : ''}>Applied</option><option ${status === 'OA' ? 'selected' : ''}>OA</option><option ${status === 'Interview' ? 'selected' : ''}>Interview</option><option ${status === 'Onsite' ? 'selected' : ''}>Onsite</option><option ${status === 'Rejected' ? 'selected' : ''}>Rejected</option><option ${status === 'Offer' ? 'selected' : ''}>Offer</option></select>
+    <select aria-label="Status for ${escapeHtml(role.title)}" data-id="${escapeHtml(role.id)}">${opts}</select>
   </div>`;
+}
+
+function setGrid(grid, items, emptyMsg, makeEl) {
+  grid.innerHTML = '';
+  if (!items.length) {
+    grid.innerHTML = `<p class="empty">${emptyMsg}</p>`;
+    return;
+  }
+  items.forEach((item) => grid.appendChild(makeEl(item)));
 }
 
 function render() {
@@ -54,13 +69,14 @@ function render() {
   const internshipRoles = dailyRoles.filter((role) => role.employmentType === 'Internship');
   const applyNow = dailyRoles.filter((role) => role.priority === 'Apply Now').length;
   summary.textContent = `${dailyRoles.length} to review · ${applyNow} apply now`;
-  fullTimeGrid.innerHTML = fullTimeRoles.map(roleCard).join('') || '<p class="empty">No new full-time roles in this run.</p>';
-  internshipGrid.innerHTML = internshipRoles.map(roleCard).join('') || '<p class="empty">No internships cleared the specialization bar in this run.</p>';
+  setGrid(fullTimeGrid, fullTimeRoles, 'No new full-time roles in this run.', roleCardEl);
+  setGrid(internshipGrid, internshipRoles, 'No internships cleared the specialization bar in this run.', roleCardEl);
   tracker.innerHTML = trackedRoles.map(trackerRow).join('') || '<p class="empty tracker-empty">Open an application from Daily Board to start tracking it here.</p>';
   const trackedFT = trackedRoles.filter((role) => role.employmentType === 'FT').length;
   const trackedInternships = trackedRoles.filter((role) => role.employmentType === 'Internship').length;
   trackerCounts.innerHTML = `<span><strong>${trackedFT}</strong> full-time</span><span><strong>${trackedInternships}</strong> internships</span>`;
-  renderGameHud();
+  renderProcs();
+  refreshHud();
 }
 
 document.querySelectorAll('[role="tab"]').forEach((tab) => tab.addEventListener('click', () => {
@@ -72,11 +88,14 @@ typeFilter.addEventListener('change', render);
 tracker.addEventListener('change', (event) => {
   if (!event.target.matches('select[data-id]')) return;
   const role = roles.find((item) => item.id === event.target.dataset.id);
+  if (!role) return;
   role.applicationStatus = event.target.value;
   localStorage.setItem(`status:${role.id}`, role.applicationStatus);
-  awardXpForStatus(role.id, event.target.value);
-  recordStreakDay();
-  renderGameHud();
+  localStorage.setItem(`status-date:${role.id}`, JB.dayStamp());
+  JB.awardXpForStatus(role.id, event.target.value);
+  JB.recordStreakDay();
+  renderProcs();
+  refreshHud();
 });
 document.querySelector('#daily-board').addEventListener('click', (event) => {
   const link = event.target.closest('[data-track-role]');
@@ -85,7 +104,7 @@ document.querySelector('#daily-board').addEventListener('click', (event) => {
   tracked.add(link.dataset.trackRole);
   saveTrackedIds(tracked);
   localStorage.setItem(`applied-date:${link.dataset.trackRole}`, new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }));
-  recordStreakDay();
+  JB.recordStreakDay();
   window.setTimeout(render, 0);
 });
 
@@ -94,13 +113,91 @@ Promise.all([
   fetch('./data/sudo-drops.json').then((response) => response.json()).catch(() => ({ drops: [] })),
   fetch('./data/logo-manifest.json').then((response) => response.json()).catch(() => ({})),
 ]).then(([jobsData, dropsData, manifest]) => {
-  logoManifest = manifest || {};
+  JB.logoManifest = manifest || {};
+  document.dispatchEvent(new Event('jb:logos'));
   roles = jobsData.roles.map((role) => ({ ...role, applicationStatus: localStorage.getItem(`status:${role.id}`) || role.applicationStatus }));
   currentRunDate = jobsData.lastRun;
   document.querySelector('#updated').textContent = `Last scan: ${jobsData.lastRun}`;
   render();
   renderSudo(dropsData.drops || []);
+  refreshHud();
 });
+
+/* ---- Procs tab: interview pipeline from the same tracker data (no new entry, no schema changes) ---- */
+const PROC_STAGES = ['Applied', 'OA', 'Phone Screen', 'Interview', 'Onsite', 'Offer'];
+const CLOSED_STATUSES = new Set(['Rejected', 'Withdrawn']);
+const NEXT_ACTION = {
+  New: 'Submit the application',
+  Applied: 'Follow up in about a week; keep prepping for the OA',
+  OA: 'Finish the online assessment',
+  'Phone Screen': 'Prep for the technical screen',
+  Interview: 'Prep for the technical rounds',
+  Onsite: 'Send thank-yous; wait for the decision',
+  Offer: 'Negotiate and decide',
+};
+const stageOf = (status) => (status === 'New' ? 'Applied' : status);
+const statusDateOf = (id) => localStorage.getItem(`status-date:${id}`) || localStorage.getItem(`applied-date:${id}`) || null;
+function daysSince(str) {
+  if (!str) return null;
+  let d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const parts = str.split('-').map(Number);
+    d = new Date(parts[0], parts[1] - 1, parts[2]);
+  } else {
+    d = new Date(str);
+  }
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.round((now - d) / 86400000));
+}
+
+function procCardEl(item) {
+  const el = document.createElement('proc-card');
+  const r = item.role;
+  el.setAttribute('company', r.company || '');
+  el.setAttribute('title', r.title || '');
+  el.setAttribute('url', r.applicationUrl || '');
+  el.setAttribute('status', item.status);
+  el.setAttribute('days', item.days === null ? '' : String(item.days));
+  el.setAttribute('next', NEXT_ACTION[item.status] || 'Keep it moving');
+  return el;
+}
+
+function renderProcs() {
+  const pipeline = document.querySelector('#proc-pipeline');
+  const closedWrap = document.querySelector('#proc-closed');
+  const closedCount = document.querySelector('#proc-closed-count');
+  if (!pipeline || !closedWrap || !closedCount) return;
+  const tracked = trackedIds();
+  const items = roles
+    .filter((r) => tracked.has(r.id))
+    .map((r) => ({ role: r, status: r.applicationStatus || 'New', days: daysSince(statusDateOf(r.id)) }));
+  const active = items
+    .filter((i) => !CLOSED_STATUSES.has(i.status))
+    .sort((a, b) => (b.days === null ? -1 : b.days) - (a.days === null ? -1 : a.days));
+  const closed = items.filter((i) => CLOSED_STATUSES.has(i.status));
+  pipeline.innerHTML = '';
+  PROC_STAGES.forEach((stage) => {
+    const col = document.createElement('section');
+    col.className = 'proc-col';
+    const cards = active.filter((i) => stageOf(i.status) === stage);
+    const h = document.createElement('h3');
+    h.innerHTML = `${escapeHtml(stage)} <span class="proc-count">${cards.length}</span>`;
+    const wrap = document.createElement('div');
+    wrap.className = 'proc-col-cards';
+    if (cards.length) cards.forEach((i) => wrap.appendChild(procCardEl(i)));
+    else wrap.innerHTML = '<p class="empty">—</p>';
+    col.appendChild(h);
+    col.appendChild(wrap);
+    pipeline.appendChild(col);
+  });
+  closedCount.textContent = String(closed.length);
+  closedWrap.innerHTML = '';
+  if (closed.length) closed.forEach((i) => closedWrap.appendChild(procCardEl(i)));
+  else closedWrap.innerHTML = '<p class="empty">Nothing closed yet.</p>';
+}
 
 /* ---- Referrals tab: referral tracker, networking, templates (localStorage only) ---- */
 const referralList = document.querySelector('#referral-list');
@@ -238,26 +335,34 @@ renderReferrals();
 renderNetwork();
 
 /* ---- Story Drops: expandable block on the Daily Board, reads data/sudo-drops.json ---- */
-const SUDO_STATUS_LABEL = { added: 'Added', pending: 'Pending', skipped: 'Skipped' };
 const formatSudoDate = (iso) => {
   const parts = String(iso).split('-').map(Number);
   if (parts.length !== 3 || parts.some(Number.isNaN)) return iso;
   return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-function dropCard(drop) {
-  const comp = drop.comp ? `<span>Comp: ${escapeHtml(drop.comp)}</span>` : '';
-  const reason = drop.skipReason ? `<p class="skip-reason">Skipped: ${escapeHtml(drop.skipReason)}</p>` : '';
-  const note = drop.note ? `<p class="drop-note">${escapeHtml(drop.note)}</p>` : '';
-  const link = drop.url
-    ? `<a href="${escapeHtml(drop.url)}" target="_blank" rel="noreferrer">Open posting</a>`
-    : `<span class="meta no-link">No link captured from story</span>`;
-  return `<article class="role-card drop-card">
-    <div class="role-head"><div class="company-line">${logoHtml(drop.company, 'company-logo')}<div><p class="eyebrow">${escapeHtml(drop.type)} · SEEN ${escapeHtml(drop.dateSeen)}</p><h3>${escapeHtml(drop.title)}</h3><p class="company">${escapeHtml(drop.company)} <span>·</span> ${escapeHtml(drop.location)}</p></div></div><div class="head-badges">${rarityBadge(drop.company)}${shinyBadge(drop.comp)}<span class="pill ${(drop.status || 'pending')}">${escapeHtml(SUDO_STATUS_LABEL[drop.status] || 'Pending')}</span></div></div>
-    ${comp ? `<div class="meta">${comp}</div>` : ''}
-    ${reason}${note}
-    ${link}
-  </article>`;
+let sudoDrops = [];
+function markDropsSeen() {
+  const seen = JB.seenDrops();
+  sudoDrops.forEach((d) => seen.add(JB.dropKey(d)));
+  localStorage.setItem(JB.SEEN_DROPS_KEY, JSON.stringify([...seen]));
+}
+
+function dropEntryEl(drop, mode, isNew) {
+  const el = document.createElement('drop-entry');
+  el.setAttribute('mode', mode);
+  el.setAttribute('company', drop.company || '');
+  el.setAttribute('title', drop.title || '');
+  el.setAttribute('location', drop.location || '');
+  el.setAttribute('type', drop.type || '');
+  el.setAttribute('dateseen', drop.dateSeen || '');
+  el.setAttribute('comp', drop.comp || '');
+  el.setAttribute('status', drop.status || 'pending');
+  el.setAttribute('skipreason', drop.skipReason || '');
+  el.setAttribute('note', drop.note || '');
+  el.setAttribute('url', drop.url || '');
+  el.setAttribute('wild', isNew ? '1' : '0');
+  return el;
 }
 
 function renderSudo(drops) {
@@ -270,157 +375,43 @@ function renderSudo(drops) {
       if (block.open) { markDropsSeen(); renderSudo(sudoDrops); }
     });
   }
-  const seen = seenDrops();
+  const seen = JB.seenDrops();
   const collapsed = document.querySelector('#sudo-collapsed');
   const full = document.querySelector('#sudo-full');
+  collapsed.innerHTML = '';
+  full.innerHTML = '';
   if (!drops.length) {
     collapsed.innerHTML = '<p class="empty">No story drops logged yet.</p>';
-    full.innerHTML = '';
     return;
   }
   const byDate = {};
   drops.forEach((d) => { (byDate[d.dateSeen] = byDate[d.dateSeen] || []).push(d); });
   const dates = Object.keys(byDate).sort().reverse();
-  collapsed.innerHTML = dates.map((dt) => {
+  dates.forEach((dt) => {
     const items = byDate[dt];
     const added = items.filter((d) => d.status === 'added').length;
-    const lines = items.map((d) => {
-      const isNew = !seen.has(dropKey(d));
-      const wild = isNew ? `<span class="wild-header">A wild ${escapeHtml(d.company)} appeared!</span>` : '';
-      return `<div class="sudo-line${isNew ? ' wild-new' : ''}">${wild}<span class="pill ${(d.status || 'pending')}">${escapeHtml(SUDO_STATUS_LABEL[d.status] || 'Pending')}</span><span>${escapeHtml(d.title)} — ${escapeHtml(d.company)}</span></div>`;
-    }).join('');
-    return `<div class="sudo-date-group"><p class="sudo-date-summary"><strong>${escapeHtml(formatSudoDate(dt))}</strong>: ${items.length} drops, ${added} added to board</p><div class="sudo-compact">${lines}</div></div>`;
-  }).join('');
-  full.innerHTML = dates.map((dt) => {
-    const items = byDate[dt];
-    return `<div class="sudo-date-group"><p class="sudo-date-summary"><strong>${escapeHtml(formatSudoDate(dt))}</strong> — full details</p><div class="grid">${items.map(dropCard).join('')}</div></div>`;
-  }).join('');
-}
+    const group = document.createElement('div');
+    group.className = 'sudo-date-group';
+    const summaryP = document.createElement('p');
+    summaryP.className = 'sudo-date-summary';
+    summaryP.innerHTML = `<strong>${escapeHtml(formatSudoDate(dt))}</strong>: ${items.length} drops, ${added} added to board`;
+    const compact = document.createElement('div');
+    compact.className = 'sudo-compact';
+    items.forEach((d) => compact.appendChild(dropEntryEl(d, 'compact', !seen.has(JB.dropKey(d)))));
+    group.appendChild(summaryP);
+    group.appendChild(compact);
+    collapsed.appendChild(group);
 
-/* ---- Gamification layer: presentation only, all state in localStorage.
-   Never modifies data files; rarity/XP/shiny are derived at render time. ---- */
-
-// Rarity derived from company name (normalized); display badges only.
-const RARITY_MAP = {
-  legendary: ['databricks', 'nvidia', 'jane-street', 'citadel-securities', 'hrt', 'two-sigma', 'anthropic', 'openai'],
-  epic: ['google', 'meta', 'apple', 'netflix', 'tesla', 'snowflake', 'stripe', 'datadog'],
-  rare: ['microsoft', 'amazon', 'tiktok', 'figma', 'cloudflare', 'coinbase', 'akuna-capital'],
-};
-const RARITY_LABEL = { legendary: 'Legendary', epic: 'Epic', rare: 'Rare', common: 'Common' };
-function rarityOf(company) {
-  const n = normCompany(company);
-  if (RARITY_MAP.legendary.includes(n)) return 'legendary';
-  if (RARITY_MAP.epic.includes(n)) return 'epic';
-  if (RARITY_MAP.rare.includes(n)) return 'rare';
-  return 'common';
-}
-const rarityBadge = (company) => {
-  const tier = rarityOf(company);
-  return `<span class="rarity ${tier}">${RARITY_LABEL[tier]}</span>`;
-};
-
-// Shiny: comp at or above $200K, parsed from existing text only.
-// Hourly rates (e.g. "$50-70/hr") are excluded as not comparable.
-function maxCompValue(text) {
-  if (!text) return 0;
-  if (/\/(hr|hour)\b/i.test(text)) return 0;
-  let max = 0;
-  const re = /\$([\d,]+(?:\.\d+)?)(?:\s*[\-\u2013\u2014]\s*([\d,]+(?:\.\d+)?))?\s*([Kk])?/g;
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    const k = m[3] ? 1000 : 1;
-    const v1 = parseFloat(m[1].replace(/,/g, '')) * k;
-    const v2 = m[2] ? parseFloat(m[2].replace(/,/g, '')) * k : 0;
-    if (v1 > max) max = v1;
-    if (v2 > max) max = v2;
-  }
-  return max;
-}
-const shinyBadge = (compText) => maxCompValue(compText) >= 200000
-  ? '<span class="shiny-badge">Shiny</span>' : '';
-
-// XP + levels (localStorage). Awards are per-role max milestones so
-// moving a status backward never subtracts XP.
-const XP_KEY = 'job-signal-xp';
-const XP_AWARDS_KEY = 'job-signal-xp-awards';
-const XP_BY_STATUS = { New: 0, Applied: 50, OA: 100, Interview: 250, Onsite: 500, Offer: 1000, Rejected: 0 };
-const LEVELS = [
-  { min: 0, title: 'Resume Rookie' },
-  { min: 200, title: 'Applicant' },
-  { min: 500, title: 'Phone Screen Pro' },
-  { min: 1200, title: 'Onsite Warrior' },
-  { min: 2500, title: 'Offer Collector' },
-];
-const getXp = () => Number(localStorage.getItem(XP_KEY) || 0);
-const getXpAwards = () => { try { return JSON.parse(localStorage.getItem(XP_AWARDS_KEY) || '{}'); } catch { return {}; } };
-function awardXpForStatus(roleId, status) {
-  const target = XP_BY_STATUS[status] || 0;
-  const awards = getXpAwards();
-  const prev = awards[roleId] || 0;
-  if (target > prev) {
-    localStorage.setItem(XP_KEY, String(getXp() + (target - prev)));
-    awards[roleId] = target;
-    localStorage.setItem(XP_AWARDS_KEY, JSON.stringify(awards));
-  }
-}
-function levelFor(xp) {
-  let lvl = LEVELS[0];
-  let next = null;
-  for (let i = 0; i < LEVELS.length; i++) {
-    if (xp >= LEVELS[i].min) lvl = LEVELS[i];
-    else { next = LEVELS[i]; break; }
-  }
-  return { lvl, next };
-}
-
-// Streaks: consecutive days with a tracker status change or new application.
-const STREAK_KEY = 'job-signal-streak-days';
-const dayStamp = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-function recordStreakDay() {
-  const today = dayStamp();
-  let days;
-  try { days = JSON.parse(localStorage.getItem(STREAK_KEY) || '[]'); } catch { days = []; }
-  if (!days.includes(today)) {
-    days.push(today);
-    localStorage.setItem(STREAK_KEY, JSON.stringify(days.slice(-90)));
-  }
-}
-function streakCount() {
-  let days;
-  try { days = new Set(JSON.parse(localStorage.getItem(STREAK_KEY) || '[]')); } catch { return 0; }
-  const d = new Date();
-  if (!days.has(dayStamp(d))) d.setDate(d.getDate() - 1);
-  let count = 0;
-  while (days.has(dayStamp(d))) { count++; d.setDate(d.getDate() - 1); }
-  return count;
-}
-
-// Wild encounters: unseen story drops get the wild header until the
-// Story Drops block is first expanded, then they are marked seen.
-const SEEN_DROPS_KEY = 'job-signal-seen-drops';
-let sudoDrops = [];
-const dropKey = (d) => `${d.dateSeen}|${d.company}|${d.title}`;
-const seenDrops = () => { try { return new Set(JSON.parse(localStorage.getItem(SEEN_DROPS_KEY) || '[]')); } catch { return new Set(); } };
-function markDropsSeen() {
-  const seen = seenDrops();
-  sudoDrops.forEach((d) => seen.add(dropKey(d)));
-  localStorage.setItem(SEEN_DROPS_KEY, JSON.stringify([...seen]));
-}
-
-// HUD: XP bar + level title + streak, rendered in the board header.
-function renderGameHud() {
-  const hud = document.querySelector('#game-hud');
-  if (!hud) return;
-  const xp = getXp();
-  const { lvl, next } = levelFor(xp);
-  const pct = next ? Math.min(100, Math.round(((xp - lvl.min) / (next.min - lvl.min)) * 100)) : 100;
-  hud.innerHTML = `<div class="hud-row">`
-    + `<span class="hud-level">${escapeHtml(lvl.title)}</span>`
-    + `<div class="xp-bar" role="progressbar" aria-valuenow="${xp}" aria-valuemin="0" aria-label="Experience points"><div class="xp-fill" style="width:${pct}%"></div></div>`
-    + `<span class="hud-xp">${xp} XP</span>`
-    + `<span class="hud-streak" title="Consecutive active days">🔥 ${streakCount()}</span>`
-    + `</div>`
-    + (next
-      ? `<p class="hud-next">${next.min - xp} XP to ${escapeHtml(next.title)}</p>`
-      : `<p class="hud-next">Max level reached</p>`);
+    const fullGroup = document.createElement('div');
+    fullGroup.className = 'sudo-date-group';
+    const fullP = document.createElement('p');
+    fullP.className = 'sudo-date-summary';
+    fullP.innerHTML = `<strong>${escapeHtml(formatSudoDate(dt))}</strong> — full details`;
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    items.forEach((d) => grid.appendChild(dropEntryEl(d, 'full', false)));
+    fullGroup.appendChild(fullP);
+    fullGroup.appendChild(grid);
+    full.appendChild(fullGroup);
+  });
 }
