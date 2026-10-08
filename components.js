@@ -18,18 +18,29 @@
 
   /* ---------- Rarity (display badges only, derived from company name) ---------- */
   const TIER_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythic'];
-  const RARITY_MAP = {
-    mythic: ['databricks', 'nvidia', 'jane-street', 'akuna-capital'],
-    legendary: ['anthropic', 'openai', 'citadel-securities', 'hrt', 'two-sigma', 'de-shaw'],
-    epic: ['google', 'meta', 'apple', 'netflix', 'tesla', 'snowflake', 'stripe', 'datadog', 'singlestore'],
-    rare: ['microsoft', 'amazon', 'tiktok', 'figma', 'cloudflare', 'coinbase', 'chalk', 'tenstorrent'],
+  /* Two track-specific tier lists: FT ranks career signal, Intern ranks conversion + program strength.
+     Legendary = asymmetric upside. DoorDash Labs is legendary via the labs-title rule below. */
+  const RARITY_FT = {
+    mythic: ['databricks', 'snowflake', 'google', 'akuna-capital'],
+    legendary: ['nvidia', 'amd', 'jane-street', 'citadel-securities', 'hrt', 'anthropic', 'openai'],
+    epic: ['meta', 'apple', 'netflix', 'tesla', 'stripe', 'doordash', 'uber', 'bloomberg', 'chalk', 'tenstorrent', 'singlestore'],
+    rare: ['oracle', 'microsoft', 'amazon', 'cisco', 'ibm', 'intel'],
+  };
+  const RARITY_INTERN = {
+    mythic: ['databricks', 'snowflake', 'google', 'akuna-capital'],
+    legendary: ['jane-street', 'citadel-securities', 'hrt', 'nvidia'],
+    epic: ['bloomberg', 'doordash', 'uber', 'meta', 'stripe'],
+    rare: ['oracle', 'microsoft', 'amazon'],
   };
   const RARITY_LABEL = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic' };
-  const rarityOf = (company) => {
+  const rarityOf = (company, type, title) => {
     const n = normCompany(company);
+    const hay = (String(company) + ' ' + String(title || '')).toLowerCase();
+    if (n === 'doordash' && hay.includes('labs')) return 'legendary';
+    const map = /intern/i.test(String(type || '')) ? RARITY_INTERN : RARITY_FT;
     for (let i = TIER_ORDER.length - 1; i >= 0; i--) {
       const t = TIER_ORDER[i];
-      if (RARITY_MAP[t] && RARITY_MAP[t].includes(n)) return t;
+      if (map[t] && map[t].includes(n)) return t;
     }
     return 'common';
   };
@@ -178,11 +189,11 @@
   }
 
   class RarityBadge extends HTMLElement {
-    static get observedAttributes() { return ['company']; }
+    static get observedAttributes() { return ['company', 'type', 'title']; }
     connectedCallback() { this.render(); }
     attributeChangedCallback() { this.render(); }
     render() {
-      const tier = rarityOf(this.getAttribute('company') || '');
+      const tier = rarityOf(this.getAttribute('company') || '', this.getAttribute('type') || '', this.getAttribute('title') || '');
       this.innerHTML = `<span class="rarity ${tier}">${RARITY_LABEL[tier]}</span>`;
     }
   }
@@ -207,7 +218,7 @@
       const g = (n) => this.getAttribute(n) || '';
       const fresh = g('freshness') ? `<span class="freshness">Source freshness: ${esc(g('freshness'))}</span>` : '';
       this.innerHTML = `<article class="role-card">
-        <div class="role-head"><div class="company-line"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img><div><p class="eyebrow">${esc(g('emptype'))} · ${esc(g('category'))}</p><h3>${esc(g('title'))}</h3><p class="company">${esc(g('company'))} <span>·</span> ${esc(g('location'))}</p></div></div><div class="head-badges"><rarity-badge company="${esc(g('company'))}"></rarity-badge><shiny-badge comp="${esc(g('rationale'))}"></shiny-badge><status-pill kind="priority" value="${esc(g('priority'))}"></status-pill></div></div>
+        <div class="role-head"><div class="company-line"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img><div><p class="eyebrow">${esc(g('emptype'))} · ${esc(g('category'))}</p><h3>${esc(g('title'))}</h3><p class="company">${esc(g('company'))} <span>·</span> ${esc(g('location'))}</p></div></div><div class="head-badges"><rarity-badge company="${esc(g('company'))}" type="${esc(g('emptype'))}" title="${esc(g('title'))}"></rarity-badge><shiny-badge comp="${esc(g('rationale'))}"></shiny-badge><status-pill kind="priority" value="${esc(g('priority'))}"></status-pill></div></div>
         <p>${esc(g('rationale'))}</p>
         <div class="meta"><span>Posted: ${esc(g('posted') || 'Not listed')}</span><span>Discovered: ${esc(g('discovered'))}</span>${fresh}</div>
         <a href="${esc(g('url'))}" target="_blank" rel="noreferrer" data-track-role="${esc(g('role-id'))}">Open application</a>
@@ -235,7 +246,7 @@
         ? `<a href="${esc(g('url'))}" target="_blank" rel="noreferrer">Open posting</a>`
         : `<span class="meta no-link">No link captured from story</span>`;
       this.innerHTML = `<article class="role-card drop-card">
-        <div class="role-head"><div class="company-line"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img><div><p class="eyebrow">${esc(g('type'))} · SEEN ${esc(g('dateseen'))}</p><h3>${esc(g('title'))}</h3><p class="company">${esc(g('company'))} <span>·</span> ${esc(g('location'))}</p></div></div><div class="head-badges"><rarity-badge company="${esc(g('company'))}"></rarity-badge><shiny-badge comp="${esc(g('comp'))}"></shiny-badge><status-pill kind="sudo" value="${esc(g('status'))}"></status-pill></div></div>
+        <div class="role-head"><div class="company-line"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img><div><p class="eyebrow">${esc(g('type'))} · SEEN ${esc(g('dateseen'))}</p><h3>${esc(g('title'))}</h3><p class="company">${esc(g('company'))} <span>·</span> ${esc(g('location'))}</p></div></div><div class="head-badges"><rarity-badge company="${esc(g('company'))}" type="${esc(g('type'))}" title="${esc(g('title'))}"></rarity-badge><shiny-badge comp="${esc(g('comp'))}"></shiny-badge><status-pill kind="sudo" value="${esc(g('status'))}"></status-pill></div></div>
         ${g('comp') ? `<div class="meta"><span>Comp: ${esc(g('comp'))}</span></div>` : ''}
         ${reason}${note}
         ${link}
@@ -281,7 +292,7 @@
       this.innerHTML = `<div class="drop-row${open ? ' open' : ''}" role="button" tabindex="0" aria-expanded="${open ? 'true' : 'false'}" aria-label="${esc(g('title'))} at ${esc(g('company'))}. Activate for details.">
           <logo-img company="${esc(g('company'))}" cls="drop-row-logo"></logo-img>
           <span class="drop-row-title"><strong>${esc(g('title'))}</strong> &mdash; ${esc(g('company'))}</span>
-          <span class="drop-row-badges"><rarity-badge company="${esc(g('company'))}"></rarity-badge><status-pill kind="sudo" value="${esc(g('status'))}"></status-pill></span>
+          <span class="drop-row-badges"><rarity-badge company="${esc(g('company'))}" type="${esc(g('type'))}" title="${esc(g('title'))}"></rarity-badge><status-pill kind="sudo" value="${esc(g('status'))}"></status-pill></span>
           <span class="drop-row-caret" aria-hidden="true">${open ? '&#9662;' : '&#9656;'}</span>
         </div>${details}`;
     }
@@ -323,7 +334,7 @@
       const stale = days !== null && days >= 7;
       const daysText = days === null ? 'date unknown' : (days === 0 ? 'today' : `${days}d ago`);
       this.innerHTML = `<article class="role-card proc-card${stale ? ' stale' : ''}">
-        <div class="role-head"><div class="company-line"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img><div><p class="eyebrow">${esc(g('status'))}</p><h3>${esc(g('title'))}</h3><p class="company">${esc(g('company'))}</p></div></div><div class="head-badges"><rarity-badge company="${esc(g('company'))}"></rarity-badge></div></div>
+        <div class="role-head"><div class="company-line"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img><div><p class="eyebrow">${esc(g('status'))}</p><h3>${esc(g('title'))}</h3><p class="company">${esc(g('company'))}</p></div></div><div class="head-badges"><rarity-badge company="${esc(g('company'))}" title="${esc(g('title'))}"></rarity-badge></div></div>
         <p class="proc-next">Next: ${esc(g('next'))}</p>
         <div class="meta"><span>Last change: ${esc(daysText)}</span>${stale ? '<span class="stale-flag">Stale 7+ days</span>' : ''}</div>
         <a href="${esc(g('url'))}" target="_blank" rel="noreferrer">Open posting</a>
@@ -345,7 +356,7 @@
     }
     connectedCallback() {
       const company = this.getAttribute('company') || '';
-      this._trueTier = rarityOf(company);
+      this._trueTier = rarityOf(company, this.getAttribute('type') || '', this.getAttribute('title') || '');
       this._stage = this.getAttribute('mystery') === '1' ? 'mystery' : 'back';
       this._taps = [];
       this._done = false;
