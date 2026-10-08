@@ -1,8 +1,9 @@
 /* Job Signal Board — app logic. Rendering is done by the reusable Web
    Components in components.js (window.JB). Presentation only: data files
-   and all collected descriptions/analysis are never modified here. */
+   and all collected descriptions/analysis are never modified here.
+   All client state goes through the centralized store (JB.store); no
+   direct localStorage access remains in this file. */
 const escapeHtml = JB.esc;
-const refreshHud = () => document.dispatchEvent(new Event('jb:hud'));
 
 const fullTimeGrid = document.querySelector('#full-time-grid');
 const internshipGrid = document.querySelector('#internship-grid');
@@ -13,10 +14,11 @@ const search = document.querySelector('#search');
 const typeFilter = document.querySelector('#type-filter');
 let roles = [];
 let currentRunDate = '';
-const trackerKey = 'job-signal-tracker-ids';
-const trackedIds = () => new Set(JSON.parse(localStorage.getItem(trackerKey) || '[]'));
-const saveTrackedIds = (ids) => localStorage.setItem(trackerKey, JSON.stringify([...ids]));
-const appliedDate = (id) => localStorage.getItem(`applied-date:${id}`) || 'Not applied';
+const store = () => JB.store;
+const trackedIds = () => new Set(store().get('tracker.ids') || []);
+const saveTrackedIds = (ids) => store().set('tracker.ids', [...ids]);
+const trackerItem = (id) => (store().get('tracker.items') || {})[id] || {};
+const appliedDate = (id) => trackerItem(id).appliedDate || 'Not applied';
 
 const TRACKER_STATUSES = ['New', 'Applied', 'OA', 'Phone Screen', 'Interview', 'Onsite', 'Offer', 'Rejected', 'Withdrawn'];
 
@@ -76,7 +78,6 @@ function render() {
   const trackedInternships = trackedRoles.filter((role) => role.employmentType === 'Internship').length;
   trackerCounts.innerHTML = `<span><strong>${trackedFT}</strong> full-time</span><span><strong>${trackedInternships}</strong> internships</span>`;
   renderProcs();
-  refreshHud();
 }
 
 document.querySelectorAll('[role="tab"]').forEach((tab) => tab.addEventListener('click', () => {
@@ -90,12 +91,14 @@ tracker.addEventListener('change', (event) => {
   const role = roles.find((item) => item.id === event.target.dataset.id);
   if (!role) return;
   role.applicationStatus = event.target.value;
-  localStorage.setItem(`status:${role.id}`, role.applicationStatus);
-  localStorage.setItem(`status-date:${role.id}`, JB.dayStamp());
+  store().update('tracker.items', (items) => {
+    const cur = items[role.id] || {};
+    items[role.id] = { ...cur, status: event.target.value, statusDate: JB.dayStamp() };
+    return items;
+  });
   JB.awardXpForStatus(role.id, event.target.value);
   JB.recordStreakDay();
   renderProcs();
-  refreshHud();
 });
 document.querySelector('#daily-board').addEventListener('click', (event) => {
   const link = event.target.closest('[data-track-role]');
@@ -103,7 +106,11 @@ document.querySelector('#daily-board').addEventListener('click', (event) => {
   const tracked = trackedIds();
   tracked.add(link.dataset.trackRole);
   saveTrackedIds(tracked);
-  localStorage.setItem(`applied-date:${link.dataset.trackRole}`, new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }));
+  store().update('tracker.items', (items) => {
+    const cur = items[link.dataset.trackRole] || {};
+    items[link.dataset.trackRole] = { ...cur, appliedDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) };
+    return items;
+  });
   JB.recordStreakDay();
   window.setTimeout(render, 0);
 });
@@ -115,13 +122,12 @@ Promise.all([
 ]).then(([jobsData, dropsData, manifest]) => {
   JB.logoManifest = manifest || {};
   document.dispatchEvent(new Event('jb:logos'));
-  roles = jobsData.roles.map((role) => ({ ...role, applicationStatus: localStorage.getItem(`status:${role.id}`) || role.applicationStatus }));
+  roles = jobsData.roles.map((role) => ({ ...role, applicationStatus: trackerItem(role.id).status || role.applicationStatus }));
   currentRunDate = jobsData.lastRun;
   document.querySelector('#updated').textContent = `Last scan: ${jobsData.lastRun}`;
   render();
   renderSudo(dropsData.drops || []);
   maybeShowPack();
-  refreshHud();
 });
 
 /* ---- Procs tab: interview pipeline from the same tracker data (no new entry, no schema changes) ---- */
@@ -137,7 +143,7 @@ const NEXT_ACTION = {
   Offer: 'Negotiate and decide',
 };
 const stageOf = (status) => (status === 'New' ? 'Applied' : status);
-const statusDateOf = (id) => localStorage.getItem(`status-date:${id}`) || localStorage.getItem(`applied-date:${id}`) || null;
+const statusDateOf = (id) => trackerItem(id).statusDate || trackerItem(id).appliedDate || null;
 function daysSince(str) {
   if (!str) return null;
   let d;
@@ -200,15 +206,17 @@ function renderProcs() {
   else closedWrap.innerHTML = '<p class="empty">Nothing closed yet.</p>';
 }
 
-/* ---- Referrals tab: referral tracker, networking, templates (localStorage only) ---- */
+/* ---- Referrals tab: referral tracker, networking, templates (store-backed, browser-only) ---- */
 const referralList = document.querySelector('#referral-list');
 const networkList = document.querySelector('#network-list');
 const templatesGrid = document.querySelector('#templates');
-const REF_KEY = 'job-signal-referrals';
-const NET_KEY = 'job-signal-network';
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-const loadJson = (key) => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };
-const saveJson = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+// Referral/networking data lives in the store (network slice); renders below
+// subscribe to it so mutations re-render automatically.
+const loadReferrals = () => store().get('network.referrals') || [];
+const saveReferrals = (val) => store().set('network.referrals', val);
+const loadPeople = () => store().get('network.people') || [];
+const savePeople = (val) => store().set('network.people', val);
 const REF_STATUSES = ['Not asked', 'Asked', 'Referred', 'Applied', 'Interviewing', 'Offer', 'Rejected'];
 
 const TEMPLATES = [
@@ -235,7 +243,7 @@ function renderTemplates() {
 
 function renderReferrals() {
   if (!referralList) return;
-  const items = loadJson(REF_KEY);
+  const items = loadReferrals();
   referralList.innerHTML = items.map((r) => `<div class="tracker-row ref-row" role="row">
     <strong>${escapeHtml(r.company)}</strong>
     ${r.link ? `<a href="${escapeHtml(r.link)}" target="_blank" rel="noreferrer">${escapeHtml(r.title)}</a>` : `<span>${escapeHtml(r.title)}</span>`}
@@ -248,7 +256,7 @@ function renderReferrals() {
 
 function renderNetwork() {
   if (!networkList) return;
-  const items = loadJson(NET_KEY);
+  const items = loadPeople();
   networkList.innerHTML = items.map((n) => `<div class="tracker-row net-row" role="row">
     <strong>${escapeHtml(n.name)}</strong>
     <span>${escapeHtml(n.company)}</span>
@@ -261,7 +269,7 @@ function renderNetwork() {
 const referralForm = document.querySelector('#referral-form');
 if (referralForm) referralForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const items = loadJson(REF_KEY);
+  const items = loadReferrals();
   items.unshift({
     id: uid(),
     company: document.querySelector('#ref-company').value.trim(),
@@ -271,15 +279,14 @@ if (referralForm) referralForm.addEventListener('submit', (e) => {
     link: document.querySelector('#ref-link').value.trim(),
     status: 'Not asked',
   });
-  saveJson(REF_KEY, items);
+  saveReferrals(items); // store subscription re-renders the list
   referralForm.reset();
-  renderReferrals();
 });
 
 const networkForm = document.querySelector('#network-form');
 if (networkForm) networkForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const items = loadJson(NET_KEY);
+  const items = loadPeople();
   items.unshift({
     id: uid(),
     name: document.querySelector('#net-name').value.trim(),
@@ -288,29 +295,26 @@ if (networkForm) networkForm.addEventListener('submit', (e) => {
     followUp: document.querySelector('#net-followup').value,
     notes: document.querySelector('#net-notes').value.trim(),
   });
-  saveJson(NET_KEY, items);
+  savePeople(items); // store subscription re-renders the list
   networkForm.reset();
-  renderNetwork();
 });
 
 document.querySelector('#referrals').addEventListener('change', (e) => {
   if (!e.target.matches('select[data-ref-id]')) return;
-  const items = loadJson(REF_KEY);
+  const items = loadReferrals();
   const item = items.find((r) => r.id === e.target.dataset.refId);
-  if (item) { item.status = e.target.value; saveJson(REF_KEY, items); }
+  if (item) { item.status = e.target.value; saveReferrals(items); }
 });
 
 document.querySelector('#referrals').addEventListener('click', (e) => {
   const delRef = e.target.closest('[data-del-ref]');
   if (delRef) {
-    saveJson(REF_KEY, loadJson(REF_KEY).filter((r) => r.id !== delRef.dataset.delRef));
-    renderReferrals();
+    saveReferrals(loadReferrals().filter((r) => r.id !== delRef.dataset.delRef));
     return;
   }
   const delNet = e.target.closest('[data-del-net]');
   if (delNet) {
-    saveJson(NET_KEY, loadJson(NET_KEY).filter((n) => n.id !== delNet.dataset.delNet));
-    renderNetwork();
+    savePeople(loadPeople().filter((n) => n.id !== delNet.dataset.delNet));
     return;
   }
   const copyBtn = e.target.closest('[data-template]');
@@ -334,6 +338,9 @@ document.querySelector('#referrals').addEventListener('click', (e) => {
 renderTemplates();
 renderReferrals();
 renderNetwork();
+// Mutations above write through the store; subscriptions re-render automatically.
+store().subscribe('network.referrals', renderReferrals);
+store().subscribe('network.people', renderNetwork);
 
 /* ---- Story Drops: expandable block on the Daily Board, reads data/sudo-drops.json ---- */
 const formatSudoDate = (iso) => {
@@ -345,9 +352,7 @@ const formatSudoDate = (iso) => {
 let sudoDrops = [];
 let todaysPackDrops = [];
 function markDropsSeen() {
-  const seen = JB.seenDrops();
-  sudoDrops.forEach((d) => seen.add(JB.dropKey(d)));
-  localStorage.setItem(JB.SEEN_DROPS_KEY, JSON.stringify([...seen]));
+  sudoDrops.forEach((d) => JB.markDropSeen(JB.dropKey(d)));
 }
 
 /* ---- Pack opening: daily drop pack with tap-to-upgrade cards ---- */
@@ -397,8 +402,8 @@ function maybeShowPack() {
   todaysPackDrops = sudoDrops.filter((d) => d.dateSeen === JB.dayStamp());
   const replay = document.querySelector('#pack-replay');
   if (replay) replay.hidden = !todaysPackDrops.length;
-  const packKey = `job-signal-pack-${JB.dayStamp()}`;
-  if (todaysPackDrops.length && !localStorage.getItem(packKey)) showPack(todaysPackDrops);
+  const stamped = store().get(`drops.packStamps.${JB.dayStamp()}`);
+  if (todaysPackDrops.length && !stamped) showPack(todaysPackDrops);
 }
 document.addEventListener('pack:closed', () => {
   markDropsSeen();
