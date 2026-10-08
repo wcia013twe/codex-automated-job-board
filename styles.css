@@ -24,3 +24,29 @@
 .sudo-full { border-top: 1px solid #2a3443; margin-top: 8px; padding-top: 18px; }
 .logo-fallback { align-items: center; background: #2a3443; border-radius: 12px; color: #9cffda; display: inline-flex; flex-shrink: 0; font-size: 1.5rem; font-weight: 800; height: 56px; justify-content: center; width: 56px; }
 @media (max-width: 650px) { .logo-fallback { height: 48px; width: 48px; } .sudo-line { font-size: .85rem; } }
+
+/* ---- Gamification layer (presentation only) ---- */
+.header-meta { align-items: flex-end; display: flex; flex-direction: column; gap: 10px; }
+#game-hud { min-width: 240px; }
+.hud-row { align-items: center; display: flex; gap: 10px; }
+.hud-level { color: #9cffda; font-size: .85rem; font-weight: 800; white-space: nowrap; }
+.xp-bar { background: #232b36; border-radius: 999px; flex: 1; height: 8px; min-width: 70px; overflow: hidden; }
+.xp-fill { background: linear-gradient(90deg, #9cffda, #5fd6a8); border-radius: 999px; height: 100%; transition: width .4s ease; }
+.hud-xp { color: #8e99a9; font-size: .8rem; white-space: nowrap; }
+.hud-streak { font-size: .95rem; font-weight: 800; white-space: nowrap; }
+.hud-next { color: #8e99a9; font-size: .75rem; margin: 4px 0 0; text-align: right; }
+.head-badges { align-items: center; display: flex; gap: 8px; }
+.rarity { border: 1px solid; border-radius: 999px; font-size: .68rem; font-weight: 800; padding: 3px 9px; white-space: nowrap; }
+.rarity.legendary { border-color: #f6c453; color: #f6c453; box-shadow: 0 0 8px rgba(246, 196, 83, .35); }
+.rarity.epic { border-color: #c792ea; color: #c792ea; }
+.rarity.rare { border-color: #7cc7f6; color: #7cc7f6; }
+.rarity.common { border-color: #4a5568; color: #8e99a9; }
+.shiny-badge { animation: shimmer 2.4s linear infinite; background: linear-gradient(110deg, #f6d67c 20%, #fff7d6 40%, #f6d67c 60%); background-size: 200% 100%; border-radius: 999px; color: #3a2f0b; font-size: .68rem; font-weight: 800; padding: 3px 9px; white-space: nowrap; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.sudo-line.wild-new { background: rgba(156, 255, 218, .06); border: 1px dashed #9cffda; border-radius: 10px; padding: 8px 10px; }
+.wild-header { color: #9cffda; font-weight: 800; }
+@media (max-width: 650px) {
+  .header-meta { align-items: stretch; }
+  .hud-next { text-align: left; }
+  .head-badges { align-self: flex-start; flex-wrap: wrap; }
+}
