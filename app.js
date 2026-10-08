@@ -426,6 +426,21 @@ function dropEntryEl(drop, mode, isNew) {
   return el;
 }
 
+function dropRowEl(drop) {
+  const el = document.createElement('drop-row');
+  el.setAttribute('company', drop.company || '');
+  el.setAttribute('title', drop.title || '');
+  el.setAttribute('location', drop.location || '');
+  el.setAttribute('type', drop.type || '');
+  el.setAttribute('dateseen', drop.dateSeen || '');
+  el.setAttribute('comp', drop.comp || '');
+  el.setAttribute('status', drop.status || 'pending');
+  el.setAttribute('skipreason', drop.skipReason || '');
+  el.setAttribute('note', drop.note || '');
+  el.setAttribute('url', drop.url || '');
+  return el;
+}
+
 function renderSudo(drops) {
   const block = document.querySelector('#sudo-block');
   if (!block) return;
@@ -467,12 +482,29 @@ function renderSudo(drops) {
     fullGroup.className = 'sudo-date-group';
     const fullP = document.createElement('p');
     fullP.className = 'sudo-date-summary';
-    fullP.innerHTML = `<strong>${escapeHtml(formatSudoDate(dt))}</strong> — full details`;
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    items.forEach((d) => grid.appendChild(dropEntryEl(d, 'full', false)));
+    fullP.innerHTML = `<strong>${escapeHtml(formatSudoDate(dt))}</strong> — tap a row for details`;
+    const list = document.createElement('div');
+    list.className = 'sudo-dense';
+    const addedItems = items.filter((d) => d.status === 'added');
+    const pendingItems = items.filter((d) => d.status === 'pending');
+    const skippedItems = items.filter((d) => d.status === 'skipped');
+    addedItems.forEach((d) => list.appendChild(dropRowEl(d)));
+    pendingItems.forEach((d) => list.appendChild(dropRowEl(d)));
     fullGroup.appendChild(fullP);
-    fullGroup.appendChild(grid);
+    fullGroup.appendChild(list);
+    if (skippedItems.length) {
+      const det = document.createElement('details');
+      det.className = 'sudo-skipped';
+      const sum = document.createElement('summary');
+      const word = skippedItems.length === 1 ? 'role' : 'roles';
+      sum.innerHTML = `<span>${skippedItems.length} skipped ${word}</span><span class="sudo-skipped-hint">show</span>`;
+      const skList = document.createElement('div');
+      skList.className = 'sudo-dense';
+      skippedItems.forEach((d) => skList.appendChild(dropRowEl(d)));
+      det.appendChild(sum);
+      det.appendChild(skList);
+      fullGroup.appendChild(det);
+    }
     full.appendChild(fullGroup);
   });
 }
