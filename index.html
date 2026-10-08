@@ -24,12 +24,13 @@
       <div class="tabs" role="tablist" aria-label="Job dashboard"><button role="tab" aria-selected="true" aria-controls="daily-board">Daily Board</button><button role="tab" aria-selected="false" aria-controls="auto-tracker">Auto Tracker</button><button role="tab" aria-selected="false" aria-controls="procs">Procs</button><button role="tab" aria-selected="false" aria-controls="referrals">Referrals</button></div>
       <section id="daily-board" role="tabpanel">
         <p class="panel-note">Your inbox for this run. Opening an application moves it to Auto Tracker. Older source results are labeled so freshness is never implied.</p>
-        <section class="board-section" id="sudo-section">
-          <div class="section-heading sudo-heading"><div><p class="eyebrow">ZERO2SUDO</p><h2>Story Drops</h2></div><button id="pack-replay" class="pack-replay-btn" hidden>Open today's pack</button></div>
+        <section class="board-section sudo-strip" id="sudo-section">
           <details class="sudo-block" id="sudo-block">
             <summary class="sudo-summary">
-              <div id="sudo-collapsed"></div>
-              <span class="sudo-hint">Expand for full details and skipped roles</span>
+              <span class="sudo-strip-tag">ZERO2SUDO</span>
+              <div id="sudo-collapsed" class="sudo-banner-wrap"></div>
+              <button id="pack-replay" class="pack-replay-btn" hidden>Open pack</button>
+              <span class="sudo-caret" aria-hidden="true">&#9662;</span>
             </summary>
             <div id="sudo-full" class="sudo-full"></div>
           </details>
