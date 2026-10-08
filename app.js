@@ -120,6 +120,7 @@ Promise.all([
   document.querySelector('#updated').textContent = `Last scan: ${jobsData.lastRun}`;
   render();
   renderSudo(dropsData.drops || []);
+  maybeShowPack();
   refreshHud();
 });
 
@@ -342,11 +343,71 @@ const formatSudoDate = (iso) => {
 };
 
 let sudoDrops = [];
+let todaysPackDrops = [];
 function markDropsSeen() {
   const seen = JB.seenDrops();
   sudoDrops.forEach((d) => seen.add(JB.dropKey(d)));
   localStorage.setItem(JB.SEEN_DROPS_KEY, JSON.stringify([...seen]));
 }
+
+/* ---- Pack opening: daily drop pack with tap-to-upgrade cards ---- */
+const REC_RANK = { 'Apply Now': 3, 'Strong Consider': 2, 'Skip Unless Team Fit': 1 };
+const normTitle = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+function recommendationOf(drop) {
+  const nc = JB.normCompany(drop.company || '');
+  const nt = normTitle(drop.title);
+  const hit = roles.find((r) => JB.normCompany(r.company || '') === nc && normTitle(r.title) === nt);
+  return hit ? hit.priority : null;
+}
+function buildPackItems(drops) {
+  const byCompany = {};
+  drops.forEach((d) => {
+    const k = JB.normCompany(d.company || '');
+    (byCompany[k] = byCompany[k] || []).push(d);
+  });
+  const items = [];
+  Object.values(byCompany).forEach((group) => {
+    const ft = group.find((d) => (d.type || '') === 'FT');
+    const intern = group.find((d) => (d.type || '') === 'Internship');
+    if (ft && intern) {
+      const rFt = REC_RANK[recommendationOf(ft)] || 0;
+      const rIn = REC_RANK[recommendationOf(intern)] || 0;
+      const ftStronger = rFt >= rIn; // tie or neither on board: full-time glows by default
+      items.push({
+        kind: 'double',
+        drops: [
+          { ...ft, glow: ftStronger ? 'strong' : 'weak' },
+          { ...intern, glow: ftStronger ? 'weak' : 'strong' },
+        ],
+      });
+      group.filter((d) => d !== ft && d !== intern).forEach((d) => items.push({ kind: 'single', drop: d }));
+    } else {
+      group.forEach((d) => items.push({ kind: 'single', drop: d }));
+    }
+  });
+  return items;
+}
+function showPack(drops) {
+  document.querySelectorAll('pack-opening').forEach((el) => el.remove());
+  const el = document.createElement('pack-opening');
+  el.items = buildPackItems(drops);
+  document.body.appendChild(el);
+}
+function maybeShowPack() {
+  todaysPackDrops = sudoDrops.filter((d) => d.dateSeen === JB.dayStamp());
+  const replay = document.querySelector('#pack-replay');
+  if (replay) replay.hidden = !todaysPackDrops.length;
+  const packKey = `job-signal-pack-${JB.dayStamp()}`;
+  if (todaysPackDrops.length && !localStorage.getItem(packKey)) showPack(todaysPackDrops);
+}
+document.addEventListener('pack:closed', () => {
+  markDropsSeen();
+  renderSudo(sudoDrops);
+});
+const packReplay = document.querySelector('#pack-replay');
+if (packReplay) packReplay.addEventListener('click', () => {
+  if (todaysPackDrops.length) showPack(todaysPackDrops);
+});
 
 function dropEntryEl(drop, mode, isNew) {
   const el = document.createElement('drop-entry');
