@@ -237,6 +237,50 @@
     }
   }
 
+  /* Dense single-line row for the Story Drops expanded view.
+     Tapping toggles ONLY this row's full details inline. */
+  class DropRow extends HTMLElement {
+    static get observedAttributes() {
+      return ['company', 'title', 'location', 'type', 'dateseen', 'comp', 'status', 'skipreason', 'note', 'url'];
+    }
+    connectedCallback() { this.render(); this._bind(); }
+    attributeChangedCallback() { this.render(); }
+    _bind() {
+      if (this._bound) return;
+      this._bound = true;
+      this.addEventListener('click', (e) => {
+        if (e.target.closest('a')) return;
+        this.toggle();
+      });
+      this.addEventListener('keydown', (e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('a')) { e.preventDefault(); this.toggle(); }
+      });
+    }
+    toggle() {
+      this._open = !this._open;
+      this.render();
+    }
+    render() {
+      const g = (n) => this.getAttribute(n) || '';
+      const open = !!this._open;
+      const reason = g('skipreason') ? `<p class="skip-reason">Skipped: ${esc(g('skipreason'))}</p>` : '';
+      const note = g('note') ? `<p class="drop-note">${esc(g('note'))}</p>` : '';
+      const link = g('url')
+        ? `<a href="${esc(g('url'))}" target="_blank" rel="noreferrer">Open posting</a>`
+        : `<span class="meta no-link">No link captured from story</span>`;
+      const details = open ? `<div class="drop-row-details">
+          <div class="meta"><span>${esc(g('type'))}</span><span>Seen ${esc(g('dateseen'))}</span><span>${esc(g('location'))}</span>${g('comp') ? `<span>Comp: ${esc(g('comp'))}</span>` : ''}</div>
+          ${reason}${note}${link}
+        </div>` : '';
+      this.innerHTML = `<div class="drop-row${open ? ' open' : ''}" role="button" tabindex="0" aria-expanded="${open ? 'true' : 'false'}" aria-label="${esc(g('title'))} at ${esc(g('company'))}. Activate for details.">
+          <logo-img company="${esc(g('company'))}" cls="drop-row-logo"></logo-img>
+          <span class="drop-row-title"><strong>${esc(g('title'))}</strong> &mdash; ${esc(g('company'))}</span>
+          <span class="drop-row-badges"><rarity-badge company="${esc(g('company'))}"></rarity-badge><status-pill kind="sudo" value="${esc(g('status'))}"></status-pill></span>
+          <span class="drop-row-caret" aria-hidden="true">${open ? '&#9662;' : '&#9656;'}</span>
+        </div>${details}`;
+    }
+  }
+
   class XpHud extends HTMLElement {
     connectedCallback() {
       if (!this.dataset.bound) {
@@ -579,6 +623,7 @@
   customElements.define('shiny-badge', ShinyBadge);
   customElements.define('role-card', RoleCard);
   customElements.define('drop-entry', DropEntry);
+  customElements.define('drop-row', DropRow);
   customElements.define('xp-hud', XpHud);
   customElements.define('proc-card', ProcCard);
   customElements.define('drop-card', DropCard);
