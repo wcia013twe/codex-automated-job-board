@@ -1,4 +1,4 @@
-const CACHE = 'job-signal-v6';
+const CACHE = 'job-signal-v7';
 const ASSETS = ['./', './index.html', './styles.css', './store.js', './components.js', './app.js', './data/jobs.json', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())));
