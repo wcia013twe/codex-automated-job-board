@@ -19,10 +19,10 @@
   /* ---------- Rarity (display badges only, derived from company name) ---------- */
   const TIER_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythic'];
   const RARITY_MAP = {
-    mythic: ['databricks', 'nvidia', 'jane-street'],
+    mythic: ['databricks', 'nvidia', 'jane-street', 'akuna-capital'],
     legendary: ['anthropic', 'openai', 'citadel-securities', 'hrt', 'two-sigma', 'de-shaw'],
     epic: ['google', 'meta', 'apple', 'netflix', 'tesla', 'snowflake', 'stripe', 'datadog', 'singlestore'],
-    rare: ['microsoft', 'amazon', 'tiktok', 'figma', 'cloudflare', 'coinbase', 'akuna-capital', 'chalk', 'tenstorrent'],
+    rare: ['microsoft', 'amazon', 'tiktok', 'figma', 'cloudflare', 'coinbase', 'chalk', 'tenstorrent'],
   };
   const RARITY_LABEL = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic' };
   const rarityOf = (company) => {
