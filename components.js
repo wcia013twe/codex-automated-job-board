@@ -45,6 +45,21 @@
     return 'common';
   };
   const tierIndex = (t) => TIER_ORDER.indexOf(t);
+  const TIER_HEX = { common: '#58B368', rare: '#4EA8DE', epic: '#9B5DE5', legendary: '#FFC53D', mythic: '#E3350D' };
+  /* Split analysis text into bullet points. Pure presentation: exact original
+     wording preserved, only the sentence boundaries become list items. */
+  const toBullets = (text) => {
+    const t = String(text || '').trim();
+    if (!t) return '';
+    const PROTECT = /\b(U\.S|e\.g|i\.e|vs|St|Mr|Mrs|Ms|Dr|Req)\./g;
+    const parts = t
+      .replace(PROTECT, (m) => m.replace(/\./g, '\uFFFF'))
+      .split(/(?<=[.!?])\s+(?=[A-Z0-9"\u201C(])/)
+      .map((s) => s.replace(/\uFFFF/g, '.').trim())
+      .filter(Boolean);
+    const items = parts.length ? parts : [t];
+    return `<ul class="fit-bullets">${items.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>`;
+  };
 
   /* ---------- Shiny: comp at or above $200K, parsed from existing text only ---------- */
   const maxCompValue = (text) => {
@@ -134,7 +149,7 @@
   const JB = {
     esc, normCompany,
     logoManifest: {},
-    TIER_ORDER, tierIndex,
+    TIER_ORDER, tierIndex, TIER_HEX, toBullets,
     rarityOf, maxCompValue,
     getXp, addXp, awardXpForStatus, levelFor, recordStreakDay, streakCount, dayStamp,
     dropKey, seenDrops, markDropSeen, SEEN_DROPS_KEY,
@@ -216,12 +231,21 @@
     attributeChangedCallback() { this.render(); }
     render() {
       const g = (n) => this.getAttribute(n) || '';
+      const tier = rarityOf(g('company'), g('emptype'), g('title'));
       const fresh = g('freshness') ? `<span class="freshness">Source freshness: ${esc(g('freshness'))}</span>` : '';
-      this.innerHTML = `<article class="role-card">
-        <div class="role-head"><div class="company-line"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img><div><p class="eyebrow">${esc(g('emptype'))} · ${esc(g('category'))}</p><h3>${esc(g('title'))}</h3><p class="company">${esc(g('company'))} <span>·</span> ${esc(g('location'))}</p></div></div><div class="head-badges"><rarity-badge company="${esc(g('company'))}" type="${esc(g('emptype'))}" title="${esc(g('title'))}"></rarity-badge><shiny-badge comp="${esc(g('rationale'))}"></shiny-badge><status-pill kind="priority" value="${esc(g('priority'))}"></status-pill></div></div>
-        <p>${esc(g('rationale'))}</p>
-        <div class="meta"><span>Posted: ${esc(g('posted') || 'Not listed')}</span><span>Discovered: ${esc(g('discovered'))}</span>${fresh}</div>
-        <a href="${esc(g('url'))}" target="_blank" rel="noreferrer" data-track-role="${esc(g('role-id'))}">Open application</a>
+      this.innerHTML = `<article class="role-card game-card t-${tier}">
+        <div class="game-top">
+          <div class="game-art"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img></div>
+          <span class="rarity ${tier}">${RARITY_LABEL[tier]}</span>
+        </div>
+        <div class="game-sheet">
+          <p class="eyebrow">${esc(g('emptype'))} · ${esc(g('category'))}</p>
+          <h3>${esc(g('title'))}</h3>
+          <p class="company">${esc(g('company'))} <span>·</span> ${esc(g('location'))}</p>
+          ${toBullets(g('rationale'))}
+          <div class="meta"><span>Posted: ${esc(g('posted') || 'Not listed')}</span><span>Discovered: ${esc(g('discovered'))}</span>${fresh}</div>
+          <div class="game-foot"><status-pill kind="priority" value="${esc(g('priority'))}"></status-pill><shiny-badge comp="${esc(g('rationale'))}"></shiny-badge><a href="${esc(g('url'))}" target="_blank" rel="noreferrer" data-track-role="${esc(g('role-id'))}">Open application</a></div>
+        </div>
       </article>`;
     }
   }
@@ -241,7 +265,7 @@
         return;
       }
       const reason = g('skipreason') ? `<p class="skip-reason">Skipped: ${esc(g('skipreason'))}</p>` : '';
-      const note = g('note') ? `<p class="drop-note">${esc(g('note'))}</p>` : '';
+      const note = g('note') ? toBullets(g('note')) : '';
       const link = g('url')
         ? `<a href="${esc(g('url'))}" target="_blank" rel="noreferrer">Open posting</a>`
         : `<span class="meta no-link">No link captured from story</span>`;
@@ -281,7 +305,7 @@
       const g = (n) => this.getAttribute(n) || '';
       const open = !!this._open;
       const reason = g('skipreason') ? `<p class="skip-reason">Skipped: ${esc(g('skipreason'))}</p>` : '';
-      const note = g('note') ? `<p class="drop-note">${esc(g('note'))}</p>` : '';
+      const note = g('note') ? toBullets(g('note')) : '';
       const link = g('url')
         ? `<a href="${esc(g('url'))}" target="_blank" rel="noreferrer">Open posting</a>`
         : `<span class="meta no-link">No link captured from story</span>`;
@@ -333,7 +357,8 @@
       const days = daysRaw === '' ? null : Number(daysRaw);
       const stale = days !== null && days >= 7;
       const daysText = days === null ? 'date unknown' : (days === 0 ? 'today' : `${days}d ago`);
-      this.innerHTML = `<article class="role-card proc-card${stale ? ' stale' : ''}">
+      const tier = rarityOf(g('company'), '', g('title'));
+      this.innerHTML = `<article class="role-card proc-card t-${tier}${stale ? ' stale' : ''}">
         <div class="role-head"><div class="company-line"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img><div><p class="eyebrow">${esc(g('status'))}</p><h3>${esc(g('title'))}</h3><p class="company">${esc(g('company'))}</p></div></div><div class="head-badges"><rarity-badge company="${esc(g('company'))}" title="${esc(g('title'))}"></rarity-badge></div></div>
         <p class="proc-next">Next: ${esc(g('next'))}</p>
         <div class="meta"><span>Last change: ${esc(daysText)}</span>${stale ? '<span class="stale-flag">Stale 7+ days</span>' : ''}</div>
@@ -425,7 +450,17 @@
     _pop() {
       this.render();
       const el = this.querySelector('.dropcard');
-      if (el) el.classList.add('pop');
+      if (!el) return;
+      el.classList.add('pop');
+      // Card-battler punch: springy scale/tilt with a flash of the new tier hue.
+      if (el.animate && typeof matchMedia === 'function' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const hex = TIER_HEX[this._stage] || TIER_HEX.common;
+        el.animate([
+          { transform: 'scale(.9) rotate(-2deg)', boxShadow: `0 0 0 ${hex}00`, opacity: .75 },
+          { transform: 'scale(1.06) rotate(1.5deg)', boxShadow: `0 0 46px ${hex}`, opacity: 1, offset: .55 },
+          { transform: 'scale(1) rotate(0deg)', boxShadow: `0 0 20px ${hex}99` },
+        ], { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+      }
     }
 
     _checkDone() {
