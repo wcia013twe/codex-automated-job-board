@@ -225,3 +225,38 @@ document.querySelector('#referrals').addEventListener('click', (e) => {
 renderTemplates();
 renderReferrals();
 renderNetwork();
+
+/* ---- Story Drops tab: reads data/sudo-drops.json, grouped by status ---- */
+function dropCard(drop) {
+  const comp = drop.comp ? `<span>Comp: ${escapeHtml(drop.comp)}</span>` : '';
+  const reason = drop.skipReason ? `<p class="skip-reason">Skipped: ${escapeHtml(drop.skipReason)}</p>` : '';
+  const note = drop.note ? `<p class="drop-note">${escapeHtml(drop.note)}</p>` : '';
+  const link = drop.url
+    ? `<a href="${escapeHtml(drop.url)}" target="_blank" rel="noreferrer">Open posting</a>`
+    : `<span class="meta no-link">No link captured from story</span>`;
+  return `<article class="role-card drop-card">
+    <div class="role-head"><div><p class="eyebrow">${escapeHtml(drop.type)} · SEEN ${escapeHtml(drop.dateSeen)}</p><h3>${escapeHtml(drop.title)}</h3><p class="company">${escapeHtml(drop.company)} <span>·</span> ${escapeHtml(drop.location)}</p></div></div>
+    ${comp ? `<div class="meta">${comp}</div>` : ''}
+    ${reason}${note}
+    ${link}
+  </article>`;
+}
+
+function renderDrops(drops, dateSeen) {
+  const groups = { added: [], pending: [], skipped: [] };
+  drops.forEach((d) => { (groups[d.status] || groups.pending).push(d); });
+  const fill = (id, items, empty) => {
+    const el = document.querySelector(id);
+    if (el) el.innerHTML = items.map(dropCard).join('') || `<p class="empty">${empty}</p>`;
+  };
+  fill('#drops-added', groups.added, 'Nothing added from story drops yet.');
+  fill('#drops-pending', groups.pending, 'Nothing pending verification.');
+  fill('#drops-skipped', groups.skipped, 'Nothing skipped.');
+  const updated = document.querySelector('#drops-updated');
+  if (updated && dateSeen) updated.textContent = `Last story scan: ${dateSeen} · ${drops.length} drops logged`;
+}
+
+fetch('./data/sudo-drops.json')
+  .then((response) => response.json())
+  .then((data) => renderDrops(data.drops || [], data.date))
+  .catch(() => renderDrops([], ''));
