@@ -396,6 +396,9 @@ function buildPackItems(drops) {
   });
   return items;
 }
+/* Pack eligibility: Rare and above only. Commons skip the pack entirely
+   (they still appear in the story drops list). */
+const packEligible = (d) => JB.tierIndex(JB.rarityOf(d.company, d.type, d.title)) >= JB.tierIndex('rare');
 function showPack(drops) {
   document.querySelectorAll('pack-opening').forEach((el) => el.remove());
   const el = document.createElement('pack-opening');
@@ -403,7 +406,7 @@ function showPack(drops) {
   document.body.appendChild(el);
 }
 function maybeShowPack() {
-  todaysPackDrops = sudoDrops.filter((d) => d.dateSeen === JB.dayStamp());
+  todaysPackDrops = sudoDrops.filter((d) => d.dateSeen === JB.dayStamp() && packEligible(d));
   const replay = document.querySelector('#pack-replay');
   if (replay) replay.hidden = !todaysPackDrops.length;
   const stamped = store().get(`drops.packStamps.${JB.dayStamp()}`);
@@ -472,21 +475,24 @@ function renderSudo(drops) {
   const byDate = {};
   drops.forEach((d) => { (byDate[d.dateSeen] = byDate[d.dateSeen] || []).push(d); });
   const dates = Object.keys(byDate).sort().reverse();
+  // Collapsed: slim one-line banner for the latest date only.
+  const latest = dates[0];
+  {
+    const items = byDate[latest];
+    const added = items.filter((d) => d.status === 'added').length;
+    const tiers = [...new Set(items.map((d) => JB.rarityOf(d.company, d.type, d.title)))]
+      .sort((a, b) => JB.tierIndex(b) - JB.tierIndex(a));
+    const banner = document.createElement('div');
+    banner.className = 'sudo-banner';
+    const dotWord = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+    banner.innerHTML = `<strong>${escapeHtml(formatSudoDate(latest))}</strong>`
+      + `<span class="sudo-banner-counts">${items.length} drops · ${added} added</span>`
+      + (tiers.length ? `<span class="rarity-dots" aria-hidden="true">${tiers.map((t) => `<i class="rdot ${t}" title="${dotWord(t)}"></i>`).join('')}</span>` : '')
+      + (dates.length > 1 ? `<span class="sudo-banner-more">+${dates.length - 1} day${dates.length - 1 === 1 ? '' : 's'}</span>` : '');
+    collapsed.appendChild(banner);
+  }
   dates.forEach((dt) => {
     const items = byDate[dt];
-    const added = items.filter((d) => d.status === 'added').length;
-    const group = document.createElement('div');
-    group.className = 'sudo-date-group';
-    const summaryP = document.createElement('p');
-    summaryP.className = 'sudo-date-summary';
-    summaryP.innerHTML = `<strong>${escapeHtml(formatSudoDate(dt))}</strong>: ${items.length} drops, ${added} added to board`;
-    const compact = document.createElement('div');
-    compact.className = 'sudo-compact';
-    items.forEach((d) => compact.appendChild(dropEntryEl(d, 'compact', !seen.has(JB.dropKey(d)))));
-    group.appendChild(summaryP);
-    group.appendChild(compact);
-    collapsed.appendChild(group);
-
     const fullGroup = document.createElement('div');
     fullGroup.className = 'sudo-date-group';
     const fullP = document.createElement('p');
