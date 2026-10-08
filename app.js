@@ -90,3 +90,138 @@ fetch('./data/jobs.json').then((response) => response.json()).then((data) => {
   document.querySelector('#updated').textContent = `Last scan: ${data.lastRun}`;
   render();
 });
+
+/* ---- Referrals tab: referral tracker, networking, templates (localStorage only) ---- */
+const referralList = document.querySelector('#referral-list');
+const networkList = document.querySelector('#network-list');
+const templatesGrid = document.querySelector('#templates');
+const REF_KEY = 'job-signal-referrals';
+const NET_KEY = 'job-signal-network';
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const loadJson = (key) => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };
+const saveJson = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+const REF_STATUSES = ['Not asked', 'Asked', 'Referred', 'Applied', 'Interviewing', 'Offer', 'Rejected'];
+
+const TEMPLATES = [
+  { name: 'Engineer you know', use: 'Someone on the team you have talked to before.', body: `Hey [Name], saw you're on [Team] at [Company]. I'm applying for the [Title] role and your work on [specific thing] stood out. I did backend work at Goldman last summer and have an Oracle offer, but I'm looking for something more infra focused. Open to referring me? I can send my resume and the link. Thanks either way.` },
+  { name: 'Engineer (cold)', use: 'No prior contact, but the team is a strong fit.', body: `Hi [Name], I'm Wesley, new grad SWE. I found you while looking into [Team] at [Company]. I've been working on [relevant project or stack] and the [Title] post looks like a fit. Would you be open to a quick chat or a referral? Totally fine if not. I can send over details.` },
+  { name: 'Recruiter', use: 'Recruiter for the role, keep it short and direct.', body: `Hi [Name], I'm interested in the [Title] role at [Company] in [Location]. I'm a recent grad with SWE experience at Goldman and an Oracle offer, mostly backend and distributed systems. Is the team still hiring for this? Happy to send my resume and a short summary. Thanks, Wesley` },
+  { name: 'Alum', use: 'Shared school, weak tie.', body: `Hey [Name], fellow [School] grad here. I'm applying for [Title] at [Company] and saw you joined [Team] last year. Most of my work has been backend at Goldman and Oracle. Would you be comfortable with a referral? I'll make it easy on my end.` },
+  { name: 'Former coworker', use: 'Worked together before, shared context.', body: `Hey [Name], we worked together on [project or team] at [Company]. I'm applying for [Title] at [NewCompany] and it lines up with the backend work we did. Would you be open to referring me? I can send my resume and the posting. Appreciate it.` },
+  { name: 'Friend', use: 'Low pressure ask.', body: `Hey [Name], quick favor. I'm applying for [Title] at [Company]. Any chance you could refer me? Happy to send everything you need. No pressure at all.` },
+  { name: 'Networking first touch', use: 'No ask yet, just start the conversation.', body: `Hi [Name], I'm Wesley, new grad SWE focused on backend and distributed systems. I saw your team at [Company] is working on [thing]. Would you be open to a 15 min chat about the work? Trying to learn more about the space.` },
+  { name: 'After a chat: referral ask', use: 'Follow up once they know you.', body: `Hi [Name], thanks for the chat, the part about [detail] was really helpful. I'm applying for the [Title] role on your team. Would you be comfortable referring me? I can send my resume and the link.` },
+  { name: 'Thank you', use: 'Send within a day of the referral.', body: `Hi [Name], just wanted to say thanks for the referral for [Title] at [Company]. Really appreciate you putting your name behind me. I'll keep you posted on how it goes.` },
+  { name: 'Bump', use: 'One nudge after 5 to 7 days, same thread.', body: `Hi [Name], bumping this in case it got buried. Still interested in the [Title] role at [Company] if you're open to referring me. Happy to send my resume and link. Thanks!` },
+];
+
+function renderTemplates() {
+  if (!templatesGrid) return;
+  templatesGrid.innerHTML = TEMPLATES.map((t, i) => `<article class="role-card template-card">
+    <div class="role-head"><div><p class="eyebrow">${escapeHtml(t.use)}</p><h3>${escapeHtml(t.name)}</h3></div></div>
+    <p class="template-body">${escapeHtml(t.body)}</p>
+    <button class="copy-btn" data-template="${i}">Copy message</button>
+  </article>`).join('');
+}
+
+function renderReferrals() {
+  if (!referralList) return;
+  const items = loadJson(REF_KEY);
+  referralList.innerHTML = items.map((r) => `<div class="tracker-row ref-row" role="row">
+    <strong>${escapeHtml(r.company)}</strong>
+    ${r.link ? `<a href="${escapeHtml(r.link)}" target="_blank" rel="noreferrer">${escapeHtml(r.title)}</a>` : `<span>${escapeHtml(r.title)}</span>`}
+    <span>${escapeHtml(r.contact)}</span>
+    <span>${escapeHtml(r.path)}</span>
+    <select aria-label="Referral status" data-ref-id="${escapeHtml(r.id)}">${REF_STATUSES.map((s) => `<option${s === r.status ? ' selected' : ''}>${s}</option>`).join('')}</select>
+    <button class="icon-btn" data-del-ref="${escapeHtml(r.id)}" aria-label="Remove">x</button>
+  </div>`).join('') || '<p class="empty tracker-empty">Add your first referral target above.</p>';
+}
+
+function renderNetwork() {
+  if (!networkList) return;
+  const items = loadJson(NET_KEY);
+  networkList.innerHTML = items.map((n) => `<div class="tracker-row net-row" role="row">
+    <strong>${escapeHtml(n.name)}</strong>
+    <span>${escapeHtml(n.company)}</span>
+    <span class="warmth ${escapeHtml(n.warmth.toLowerCase())}">${escapeHtml(n.warmth)}</span>
+    <span>${escapeHtml(n.followUp || 'No date set')}${n.notes ? ` - ${escapeHtml(n.notes)}` : ''}</span>
+    <button class="icon-btn" data-del-net="${escapeHtml(n.id)}" aria-label="Remove">x</button>
+  </div>`).join('') || '<p class="empty tracker-empty">Add people you want to stay in touch with.</p>';
+}
+
+const referralForm = document.querySelector('#referral-form');
+if (referralForm) referralForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const items = loadJson(REF_KEY);
+  items.unshift({
+    id: uid(),
+    company: document.querySelector('#ref-company').value.trim(),
+    title: document.querySelector('#ref-title').value.trim(),
+    contact: document.querySelector('#ref-contact').value.trim(),
+    path: document.querySelector('#ref-path').value,
+    link: document.querySelector('#ref-link').value.trim(),
+    status: 'Not asked',
+  });
+  saveJson(REF_KEY, items);
+  referralForm.reset();
+  renderReferrals();
+});
+
+const networkForm = document.querySelector('#network-form');
+if (networkForm) networkForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const items = loadJson(NET_KEY);
+  items.unshift({
+    id: uid(),
+    name: document.querySelector('#net-name').value.trim(),
+    company: document.querySelector('#net-company').value.trim(),
+    warmth: document.querySelector('#net-warmth').value,
+    followUp: document.querySelector('#net-followup').value,
+    notes: document.querySelector('#net-notes').value.trim(),
+  });
+  saveJson(NET_KEY, items);
+  networkForm.reset();
+  renderNetwork();
+});
+
+document.querySelector('#referrals').addEventListener('change', (e) => {
+  if (!e.target.matches('select[data-ref-id]')) return;
+  const items = loadJson(REF_KEY);
+  const item = items.find((r) => r.id === e.target.dataset.refId);
+  if (item) { item.status = e.target.value; saveJson(REF_KEY, items); }
+});
+
+document.querySelector('#referrals').addEventListener('click', (e) => {
+  const delRef = e.target.closest('[data-del-ref]');
+  if (delRef) {
+    saveJson(REF_KEY, loadJson(REF_KEY).filter((r) => r.id !== delRef.dataset.delRef));
+    renderReferrals();
+    return;
+  }
+  const delNet = e.target.closest('[data-del-net]');
+  if (delNet) {
+    saveJson(NET_KEY, loadJson(NET_KEY).filter((n) => n.id !== delNet.dataset.delNet));
+    renderNetwork();
+    return;
+  }
+  const copyBtn = e.target.closest('[data-template]');
+  if (copyBtn) {
+    const t = TEMPLATES[Number(copyBtn.dataset.template)];
+    const done = () => { copyBtn.textContent = 'Copied'; setTimeout(() => { copyBtn.textContent = 'Copy message'; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t.body).then(done).catch(done);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = t.body;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch {}
+      document.body.removeChild(ta);
+      done();
+    }
+  }
+});
+
+renderTemplates();
+renderReferrals();
+renderNetwork();
