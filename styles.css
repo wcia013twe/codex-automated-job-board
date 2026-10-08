@@ -50,3 +50,22 @@
   .hud-next { text-align: left; }
   .head-badges { align-self: flex-start; flex-wrap: wrap; }
 }
+
+/* ---- Web Components (light DOM; wrappers stay layout-neutral) ---- */
+role-card, drop-entry, proc-card, logo-img, status-pill, rarity-badge, shiny-badge { display: contents; }
+xp-hud { display: block; }
+
+/* ---- Procs tab: interview pipeline ---- */
+.proc-pipeline { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-top: 18px; }
+.proc-col { background: #12161d; border: 1px solid #2a3443; border-radius: 12px; padding: 12px; }
+.proc-col > h3 { align-items: center; display: flex; font-size: .95rem; justify-content: space-between; margin: 0 0 10px; }
+.proc-count { background: #232b36; border-radius: 999px; color: #9cffda; font-size: .75rem; font-weight: 800; padding: 2px 10px; }
+.proc-col-cards { display: flex; flex-direction: column; gap: 10px; }
+.proc-card { min-height: 0; padding: 14px; }
+.proc-next { color: #9cffda; font-size: .85rem; font-weight: 700; margin: 0; }
+.proc-card.stale { border-color: #f6d67c; }
+.stale-flag { color: #f6d67c; font-weight: 700; }
+.proc-closed { background: #171c24; border: 1px solid #2a3443; border-radius: 12px; margin-top: 22px; padding: 14px 18px; }
+.proc-closed > summary { cursor: pointer; font-weight: 800; }
+.proc-closed .grid { margin-top: 14px; }
+@media (max-width: 650px) { .proc-pipeline { grid-template-columns: 1fr; } }
