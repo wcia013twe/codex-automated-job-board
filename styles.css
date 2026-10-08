@@ -46,10 +46,33 @@ drop-card { display: block; }
 .pack-claim { background: #00E676; border: 0; border-radius: 999px; box-shadow: 0 0 18px rgba(0, 230, 118, .35); color: #06281a; cursor: pointer; font: inherit; font-weight: 800; min-height: 48px; padding: 12px 28px; white-space: nowrap; }
 .pack-claim:hover:not(:disabled) { background: #2bff92; box-shadow: 0 0 24px rgba(0, 230, 118, .5); }
 .pack-claim:disabled { cursor: default; opacity: .6; }
-.dropcard { align-items: center; background: #171c24; border: 2px solid #2a3443; border-radius: 16px; cursor: pointer; display: flex; flex: 0 0 auto; flex-direction: column; gap: 8px; justify-content: center; min-height: 340px; padding: 18px; scroll-snap-align: start; text-align: center; transition: border-color .2s ease, box-shadow .2s ease; user-select: none; -webkit-user-select: none; width: 240px; }
+.dropcard { align-items: stretch; background: #0B0B0E; border: 2px solid #2a3443; border-radius: 20px; cursor: pointer; display: flex; flex: 0 0 auto; flex-direction: column; gap: 0; justify-content: flex-start; min-height: 340px; overflow: hidden; padding: 0; scroll-snap-align: start; text-align: center; transition: border-color .2s ease, box-shadow .2s ease; user-select: none; -webkit-user-select: none; width: 240px; }
+/* Figma "Poke Breed" split card: teal-gradient top with white circular art
+   badge, black bottom sheet with large top radius. */
+.pack-modal, .dropcard, .rarity, #game-hud, .pack-replay-btn, .pack-claim, .dropcard-link { font-family: 'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif; }
+.dropcard-top { background: linear-gradient(135deg, #5FE3C8 0%, #3ED3B4 100%); padding: 22px 14px 36px; position: relative; }
+.dropcard-art { align-items: center; background: #fff; border-radius: 50%; box-shadow: 0 8px 22px rgba(0, 0, 0, .35); display: flex; height: 88px; justify-content: center; margin: 0 auto; width: 88px; }
+.dropcard-art .company-logo { height: 58px; width: 58px; }
+.dropcard-art .logo-fallback { border-radius: 50%; font-size: 2rem; height: 58px; width: 58px; }
+.dropcard-top .rarity { left: 50%; position: absolute; top: 10px; transform: translateX(-50%); }
+.dropcard-sheet { background: #0B0B0E; border-radius: 28px 28px 0 0; display: flex; flex: 1; flex-direction: column; gap: 8px; justify-content: center; margin-top: -24px; padding: 20px 16px 16px; position: relative; }
+.dropcard-sheet h4 { color: #fff; font-size: 1.05rem; font-weight: 900; margin: 0; }
+.dropcard-sheet .dropcard-company { color: #b9c2cf; font-weight: 800; margin: 0; }
+.dropcard-stats { display: flex; flex-direction: column; gap: 7px; margin: 8px 0 2px; text-align: left; }
+.stat-row { align-items: baseline; display: flex; gap: 10px; justify-content: space-between; }
+.stat-row span:first-child { color: #8e99a9; font-size: .66rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.stat-row span:last-child { color: #fff; font-size: .82rem; font-weight: 700; text-align: right; }
+/* Coin pills (Figma currency motif) for the XP HUD. */
+.coin-pill { align-items: center; background: #000; border: 0; border-radius: 999px; color: #fff; display: inline-flex; font-size: .8rem; font-weight: 800; gap: 6px; padding: 5px 8px 5px 14px; position: relative; white-space: nowrap; }
+.coin-plus { align-items: center; background: #00E676; border-radius: 50%; color: #06281a; display: inline-flex; font-size: .75rem; font-weight: 900; height: 20px; justify-content: center; width: 20px; }
+.coin-pill.gold { background: #FFCB05; box-shadow: 0 0 10px rgba(255, 203, 5, .35); color: #231a00; }
+/* Reveal-complete summary in wide-tracked uppercase, Figma CONGRATULATIONS style. */
+.pack-summary { letter-spacing: .1em; text-transform: uppercase; }
 .dropcard.mini { min-height: 310px; width: 172px; }
 .dropcard:focus-visible { outline: 2px solid #9cffda; outline-offset: 2px; }
-.dropcard.back { background: repeating-linear-gradient(135deg, #1a212c 0 14px, #141a24 14px 28px); border-color: #3a4658; }
+.dropcard.back { align-items: center; background: repeating-linear-gradient(135deg, #1a212c 0 14px, #141a24 14px 28px); border-color: #3a4658; gap: 8px; justify-content: center; padding: 18px; }
+.dropcard.mystery { align-items: center; gap: 8px; justify-content: center; padding: 18px; }
+.hud-xp.coin-pill { color: #fff; }
 .dropcard.mystery { background: #0B0B0E; border: 1px solid #2a3443; border-radius: 20px; box-shadow: inset 0 0 40px rgba(0, 0, 0, .9); }
 .dropcard.mystery .wild-header { color: #fff; }
 .dropcard.t-common { border-color: #9AA0A6; }
