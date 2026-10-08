@@ -18,7 +18,7 @@
     <main>
       <header><div><p class="eyebrow">US SOFTWARE ENGINEERING</p><h1>Job signal board</h1><p class="subhead">A selective inbox for systems, data, ML infrastructure, and high-leverage roles.</p></div><p id="updated"></p></header>
       <section class="controls"><input id="search" type="search" placeholder="Filter company, role, or domain"><select id="type-filter" aria-label="Employment type"><option value="">All roles</option><option value="FT">Full-time</option><option value="Internship">Internships</option></select><p id="summary"></p></section>
-      <div class="tabs" role="tablist" aria-label="Job dashboard"><button role="tab" aria-selected="true" aria-controls="daily-board">Daily Board</button><button role="tab" aria-selected="false" aria-controls="auto-tracker">Auto Tracker</button></div>
+      <div class="tabs" role="tablist" aria-label="Job dashboard"><button role="tab" aria-selected="true" aria-controls="daily-board">Daily Board</button><button role="tab" aria-selected="false" aria-controls="auto-tracker">Auto Tracker</button><button role="tab" aria-selected="false" aria-controls="referrals">Referrals</button></div>
       <section id="daily-board" role="tabpanel">
         <p class="panel-note">Your inbox for this run. Opening an application moves it to Auto Tracker. Older source results are labeled so freshness is never implied.</p>
         <section class="board-section"><div class="section-heading"><p class="eyebrow">FULL-TIME</p><h2>New-grad & early-career roles</h2></div><div id="full-time-grid" class="grid"></div></section>
@@ -28,6 +28,49 @@
         <p class="panel-note">Only roles you have opened live here. Status changes and applied dates are kept locally in your browser.</p>
         <div id="tracker-counts" class="tracker-counts"></div>
         <div class="tracker-table" role="table" aria-label="Tracked applications"><div class="tracker-row tracker-head" role="row"><span>Company</span><span>Job title</span><span>Type</span><span>Date applied</span><span>Status</span></div><div id="tracker"></div></div>
+      </section>
+      <section id="referrals" role="tabpanel" hidden>
+        <p class="panel-note">People beat portals. Track who can refer you, stay in touch with your network, and grab a copy paste message when it is time to ask. Everything here stays in your browser.</p>
+        <section class="board-section">
+          <div class="section-heading"><p class="eyebrow">REFERRALS</p><h2>Referral tracker</h2></div>
+          <form id="referral-form" class="mini-form">
+            <input id="ref-company" placeholder="Company" required>
+            <input id="ref-title" placeholder="Role title" required>
+            <input id="ref-contact" placeholder="Contact name" required>
+            <select id="ref-path" aria-label="Referral path">
+              <option>Engineer I know</option>
+              <option>Engineer (cold)</option>
+              <option>Recruiter</option>
+              <option>Alum</option>
+              <option>Former coworker</option>
+              <option>Friend</option>
+            </select>
+            <input id="ref-link" placeholder="Job link (optional)">
+            <button type="submit">Add</button>
+          </form>
+          <div class="tracker-table" role="table" aria-label="Referral tracker"><div class="tracker-row tracker-head ref-head" role="row"><span>Company</span><span>Role</span><span>Contact</span><span>Path</span><span>Status</span><span></span></div><div id="referral-list"></div></div>
+        </section>
+        <section class="board-section">
+          <div class="section-heading"><p class="eyebrow">NETWORKING</p><h2>People to stay in touch with</h2></div>
+          <form id="network-form" class="mini-form">
+            <input id="net-name" placeholder="Name" required>
+            <input id="net-company" placeholder="Company" required>
+            <select id="net-warmth" aria-label="Warmth">
+              <option>Warm</option>
+              <option>Cooling</option>
+              <option>Cold</option>
+            </select>
+            <input id="net-followup" type="date" aria-label="Next follow-up">
+            <input id="net-notes" placeholder="Notes (optional)">
+            <button type="submit">Add</button>
+          </form>
+          <div class="tracker-table" role="table" aria-label="Networking tracker"><div class="tracker-row tracker-head net-head" role="row"><span>Name</span><span>Company</span><span>Warmth</span><span>Follow up</span><span></span></div><div id="network-list"></div></div>
+        </section>
+        <section class="board-section">
+          <div class="section-heading"><p class="eyebrow">TEMPLATES</p><h2>Copy paste messages</h2></div>
+          <p class="panel-note">Pick the path, copy, fill in the brackets, send.</p>
+          <div id="templates" class="grid"></div>
+        </section>
       </section>
     </main>
     <script src="app.js"></script>
