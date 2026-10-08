@@ -120,7 +120,11 @@ Promise.all([
   fetch('./data/sudo-drops.json').then((response) => response.json()).catch(() => ({ drops: [] })),
   fetch('./data/logo-manifest.json').then((response) => response.json()).catch(() => ({})),
 ]).then(([jobsData, dropsData, manifest]) => {
-  JB.logoManifest = manifest || {};
+  // Mutate the shared object in place: components.js captured the original
+  // logoManifest reference when it ran Object.assign(window.JB, JB), so
+  // replacing it here would leave LogoImg.render() reading a stale empty
+  // object and no logos would ever render.
+  Object.assign(JB.logoManifest, manifest || {});
   document.dispatchEvent(new Event('jb:logos'));
   roles = jobsData.roles.map((role) => ({ ...role, applicationStatus: trackerItem(role.id).status || role.applicationStatus }));
   currentRunDate = jobsData.lastRun;
