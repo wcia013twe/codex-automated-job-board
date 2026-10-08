@@ -388,7 +388,10 @@
         this._taps = [...this._taps.filter((t) => now - t < 1500), now];
         const el = this.querySelector('.dropcard');
         if (el) { el.classList.remove('jiggle'); void el.offsetWidth; el.classList.add('jiggle'); }
-        if (this._taps.length >= 5) this._unlock();
+        const need = 3 - this._taps.length;
+        const counter = this.querySelector('.mystery-count');
+        if (counter) counter.textContent = need > 0 ? `${need} more tap${need === 1 ? '' : 's'}!` : '';
+        if (this._taps.length >= 3) this._unlock();
         return;
       }
       if (this._stage === 'back') {
@@ -442,7 +445,8 @@
         this.innerHTML = `<article class="dropcard mystery${miniCls}" role="button" tabindex="0" aria-label="Mystery drop. Tap rapidly or swipe to reveal.">
           <p class="wild-header">A wild ${esc(g('company'))} appeared!</p>
           <div class="mystery-q">?</div>
-          <p class="dropcard-hint">spam-tap or swipe to unlock</p>
+          <p class="mystery-count">3 more taps!</p>
+          <p class="dropcard-hint">tap rapidly or swipe to unlock</p>
         </article>`;
         return;
       }
