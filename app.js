@@ -7,12 +7,7 @@ const search = document.querySelector('#search');
 const typeFilter = document.querySelector('#type-filter');
 let roles = [];
 let currentRunDate = '';
-const companyDomains = {
-  'DoorDash': 'doordash.com', 'Render': 'render.com', 'Kled AI': 'kled.ai',
-  'Zettabyte': 'zettabyte.com', 'Cohere': 'cohere.com', 'DatologyAI': 'datologyai.com',
-  'Lambda': 'lambda.ai', 'Pulse': 'pulse.com', 'Together AI': 'together.ai',
-  'SingleStore': 'singlestore.com', 'Freeform': 'freeform.co'
-};
+let logoManifest = {};
 const trackerKey = 'job-signal-tracker-ids';
 const trackedIds = () => new Set(JSON.parse(localStorage.getItem(trackerKey) || '[]'));
 const saveTrackedIds = (ids) => localStorage.setItem(trackerKey, JSON.stringify([...ids]));
@@ -20,12 +15,17 @@ const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (char) => ({ '&'
 const date = (value) => value || 'Not listed';
 const appliedDate = (id) => localStorage.getItem(`applied-date:${id}`) || 'Not applied';
 const freshness = (role) => role.sourceFreshness ? `<span class="freshness">Source freshness: ${escapeHtml(role.sourceFreshness)}</span>` : '';
+const normCompany = (name) => String(name).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]+/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+function logoHtml(company, cls) {
+  const path = logoManifest[normCompany(company)];
+  if (path) return `<img class="${cls}" src="${escapeHtml(path)}" alt="${escapeHtml(company)} logo" loading="lazy" onerror="this.outerHTML='<span class=&quot;${cls} logo-fallback&quot; aria-hidden=&quot;true&quot;>${escapeHtml((String(company).trim()[0] || '?').toUpperCase())}</span>'">`;
+  const initial = (String(company).trim()[0] || '?').toUpperCase();
+  return `<span class="${cls} logo-fallback" aria-hidden="true">${escapeHtml(initial)}</span>`;
+}
 
 function roleCard(role) {
-  const domain = companyDomains[role.company] || role.applicationUrl;
-  const logo = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
   return `<article class="role-card">
-    <div class="role-head"><div class="company-line"><img class="company-logo" src="${logo}" alt="${escapeHtml(role.company)} logo" loading="lazy"><div><p class="eyebrow">${escapeHtml(role.employmentType)} · ${escapeHtml(role.category)}</p><h3>${escapeHtml(role.title)}</h3><p class="company">${escapeHtml(role.company)} <span>·</span> ${escapeHtml(role.location)}</p></div></div><span class="priority ${role.priority.toLowerCase().replaceAll(' ', '-')}">${escapeHtml(role.priority)}</span></div>
+    <div class="role-head"><div class="company-line">${logoHtml(role.company, 'company-logo')}<div><p class="eyebrow">${escapeHtml(role.employmentType)} · ${escapeHtml(role.category)}</p><h3>${escapeHtml(role.title)}</h3><p class="company">${escapeHtml(role.company)} <span>·</span> ${escapeHtml(role.location)}</p></div></div><span class="priority ${role.priority.toLowerCase().replaceAll(' ', '-')}">${escapeHtml(role.priority)}</span></div>
     <p>${escapeHtml(role.whyItFits)}</p>
     <div class="meta"><span>Posted: ${date(role.postedDate)}</span><span>Discovered: ${role.discoveredDate}</span>${freshness(role)}</div>
     <a href="${escapeHtml(role.applicationUrl)}" target="_blank" rel="noreferrer" data-track-role="${escapeHtml(role.id)}">Open application</a>
@@ -84,11 +84,17 @@ document.querySelector('#daily-board').addEventListener('click', (event) => {
   window.setTimeout(render, 0);
 });
 
-fetch('./data/jobs.json').then((response) => response.json()).then((data) => {
-  roles = data.roles.map((role) => ({ ...role, applicationStatus: localStorage.getItem(`status:${role.id}`) || role.applicationStatus }));
-  currentRunDate = data.lastRun;
-  document.querySelector('#updated').textContent = `Last scan: ${data.lastRun}`;
+Promise.all([
+  fetch('./data/jobs.json').then((response) => response.json()),
+  fetch('./data/sudo-drops.json').then((response) => response.json()).catch(() => ({ drops: [] })),
+  fetch('./data/logo-manifest.json').then((response) => response.json()).catch(() => ({})),
+]).then(([jobsData, dropsData, manifest]) => {
+  logoManifest = manifest || {};
+  roles = jobsData.roles.map((role) => ({ ...role, applicationStatus: localStorage.getItem(`status:${role.id}`) || role.applicationStatus }));
+  currentRunDate = jobsData.lastRun;
+  document.querySelector('#updated').textContent = `Last scan: ${jobsData.lastRun}`;
   render();
+  renderSudo(dropsData.drops || []);
 });
 
 /* ---- Referrals tab: referral tracker, networking, templates (localStorage only) ---- */
@@ -226,7 +232,14 @@ renderTemplates();
 renderReferrals();
 renderNetwork();
 
-/* ---- Story Drops tab: reads data/sudo-drops.json, grouped by status ---- */
+/* ---- Story Drops: expandable block on the Daily Board, reads data/sudo-drops.json ---- */
+const SUDO_STATUS_LABEL = { added: 'Added', pending: 'Pending', skipped: 'Skipped' };
+const formatSudoDate = (iso) => {
+  const parts = String(iso).split('-').map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return iso;
+  return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
 function dropCard(drop) {
   const comp = drop.comp ? `<span>Comp: ${escapeHtml(drop.comp)}</span>` : '';
   const reason = drop.skipReason ? `<p class="skip-reason">Skipped: ${escapeHtml(drop.skipReason)}</p>` : '';
@@ -235,28 +248,34 @@ function dropCard(drop) {
     ? `<a href="${escapeHtml(drop.url)}" target="_blank" rel="noreferrer">Open posting</a>`
     : `<span class="meta no-link">No link captured from story</span>`;
   return `<article class="role-card drop-card">
-    <div class="role-head"><div><p class="eyebrow">${escapeHtml(drop.type)} · SEEN ${escapeHtml(drop.dateSeen)}</p><h3>${escapeHtml(drop.title)}</h3><p class="company">${escapeHtml(drop.company)} <span>·</span> ${escapeHtml(drop.location)}</p></div></div>
+    <div class="role-head"><div class="company-line">${logoHtml(drop.company, 'company-logo')}<div><p class="eyebrow">${escapeHtml(drop.type)} · SEEN ${escapeHtml(drop.dateSeen)}</p><h3>${escapeHtml(drop.title)}</h3><p class="company">${escapeHtml(drop.company)} <span>·</span> ${escapeHtml(drop.location)}</p></div></div><span class="pill ${(drop.status || 'pending')}">${escapeHtml(SUDO_STATUS_LABEL[drop.status] || 'Pending')}</span></div>
     ${comp ? `<div class="meta">${comp}</div>` : ''}
     ${reason}${note}
     ${link}
   </article>`;
 }
 
-function renderDrops(drops, dateSeen) {
-  const groups = { added: [], pending: [], skipped: [] };
-  drops.forEach((d) => { (groups[d.status] || groups.pending).push(d); });
-  const fill = (id, items, empty) => {
-    const el = document.querySelector(id);
-    if (el) el.innerHTML = items.map(dropCard).join('') || `<p class="empty">${empty}</p>`;
-  };
-  fill('#drops-added', groups.added, 'Nothing added from story drops yet.');
-  fill('#drops-pending', groups.pending, 'Nothing pending verification.');
-  fill('#drops-skipped', groups.skipped, 'Nothing skipped.');
-  const updated = document.querySelector('#drops-updated');
-  if (updated && dateSeen) updated.textContent = `Last story scan: ${dateSeen} · ${drops.length} drops logged`;
+function renderSudo(drops) {
+  const block = document.querySelector('#sudo-block');
+  if (!block) return;
+  const collapsed = document.querySelector('#sudo-collapsed');
+  const full = document.querySelector('#sudo-full');
+  if (!drops.length) {
+    collapsed.innerHTML = '<p class="empty">No story drops logged yet.</p>';
+    full.innerHTML = '';
+    return;
+  }
+  const byDate = {};
+  drops.forEach((d) => { (byDate[d.dateSeen] = byDate[d.dateSeen] || []).push(d); });
+  const dates = Object.keys(byDate).sort().reverse();
+  collapsed.innerHTML = dates.map((dt) => {
+    const items = byDate[dt];
+    const added = items.filter((d) => d.status === 'added').length;
+    const lines = items.map((d) => `<div class="sudo-line"><span class="pill ${(d.status || 'pending')}">${escapeHtml(SUDO_STATUS_LABEL[d.status] || 'Pending')}</span><span>${escapeHtml(d.title)} — ${escapeHtml(d.company)}</span></div>`).join('');
+    return `<div class="sudo-date-group"><p class="sudo-date-summary"><strong>${escapeHtml(formatSudoDate(dt))}</strong>: ${items.length} drops, ${added} added to board</p><div class="sudo-compact">${lines}</div></div>`;
+  }).join('');
+  full.innerHTML = dates.map((dt) => {
+    const items = byDate[dt];
+    return `<div class="sudo-date-group"><p class="sudo-date-summary"><strong>${escapeHtml(formatSudoDate(dt))}</strong> — full details</p><div class="grid">${items.map(dropCard).join('')}</div></div>`;
+  }).join('');
 }
-
-fetch('./data/sudo-drops.json')
-  .then((response) => response.json())
-  .then((data) => renderDrops(data.drops || [], data.date))
-  .catch(() => renderDrops([], ''));
