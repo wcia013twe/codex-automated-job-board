@@ -13,19 +13,23 @@
     .replace(/\s+/g, '-').replace(/-+/g, '-');
 
   /* ---------- Rarity (display badges only, derived from company name) ---------- */
+  const TIER_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythic'];
   const RARITY_MAP = {
-    legendary: ['databricks', 'nvidia', 'jane-street', 'citadel-securities', 'hrt', 'two-sigma', 'anthropic', 'openai'],
-    epic: ['google', 'meta', 'apple', 'netflix', 'tesla', 'snowflake', 'stripe', 'datadog'],
-    rare: ['microsoft', 'amazon', 'tiktok', 'figma', 'cloudflare', 'coinbase', 'akuna-capital'],
+    mythic: ['databricks', 'nvidia', 'jane-street'],
+    legendary: ['anthropic', 'openai', 'citadel-securities', 'hrt', 'two-sigma', 'de-shaw'],
+    epic: ['google', 'meta', 'apple', 'netflix', 'tesla', 'snowflake', 'stripe', 'datadog', 'singlestore'],
+    rare: ['microsoft', 'amazon', 'tiktok', 'figma', 'cloudflare', 'coinbase', 'akuna-capital', 'chalk', 'tenstorrent'],
   };
-  const RARITY_LABEL = { legendary: 'Legendary', epic: 'Epic', rare: 'Rare', common: 'Common' };
+  const RARITY_LABEL = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary', mythic: 'Mythic' };
   const rarityOf = (company) => {
     const n = normCompany(company);
-    if (RARITY_MAP.legendary.includes(n)) return 'legendary';
-    if (RARITY_MAP.epic.includes(n)) return 'epic';
-    if (RARITY_MAP.rare.includes(n)) return 'rare';
+    for (let i = TIER_ORDER.length - 1; i >= 0; i--) {
+      const t = TIER_ORDER[i];
+      if (RARITY_MAP[t] && RARITY_MAP[t].includes(n)) return t;
+    }
     return 'common';
   };
+  const tierIndex = (t) => TIER_ORDER.indexOf(t);
 
   /* ---------- Shiny: comp at or above $200K, parsed from existing text only ---------- */
   const maxCompValue = (text) => {
@@ -56,6 +60,11 @@
     { min: 2500, title: 'Offer Collector' },
   ];
   const getXp = () => Number(localStorage.getItem(XP_KEY) || 0);
+  const addXp = (n) => {
+    const v = getXp() + n;
+    localStorage.setItem(XP_KEY, String(v));
+    return v;
+  };
   const getXpAwards = () => { try { return JSON.parse(localStorage.getItem(XP_AWARDS_KEY) || '{}'); } catch { return {}; } };
   const awardXpForStatus = (roleId, status) => {
     const target = XP_BY_STATUS[status] || 0;
@@ -107,8 +116,9 @@
   const JB = {
     esc, normCompany,
     logoManifest: {},
+    TIER_ORDER, tierIndex,
     rarityOf, maxCompValue,
-    getXp, awardXpForStatus, levelFor, recordStreakDay, streakCount, dayStamp,
+    getXp, addXp, awardXpForStatus, levelFor, recordStreakDay, streakCount, dayStamp,
     dropKey, seenDrops, SEEN_DROPS_KEY,
     logoFallback(img) {
       const company = img.getAttribute('data-company') || '';
@@ -270,6 +280,299 @@
     }
   }
 
+  /* ================= Pack opening: <drop-card> + <pack-opening> =================
+     Brawl-Stars-style reveal. Each card starts face-down; tapping flips it to
+     Common and each further tap upgrades one tier, stopping at the card's
+     true tier (derived from company name, never past it). Mystery cards are
+     unlocked by spam-tapping or swiping. Presentation only; all state in
+     localStorage. Emits bubbling 'dropcard:done' when a card hits its true
+     tier, and 'dropcard:seen' when a mystery is unlocked. */
+
+  const markDropSeen = (key) => {
+    const seen = seenDrops();
+    seen.add(key);
+    localStorage.setItem(SEEN_DROPS_KEY, JSON.stringify([...seen]));
+  };
+
+  class DropCard extends HTMLElement {
+    static get observedAttributes() {
+      return ['company', 'title', 'location', 'type', 'comp', 'status', 'skipreason', 'url', 'dropkey', 'mystery', 'glow', 'mini'];
+    }
+    connectedCallback() {
+      const company = this.getAttribute('company') || '';
+      this._trueTier = rarityOf(company);
+      this._stage = this.getAttribute('mystery') === '1' ? 'mystery' : 'back';
+      this._taps = [];
+      this._done = false;
+      this._bound = false;
+      this.render();
+      this._bind();
+    }
+    attributeChangedCallback() { /* stage changes re-render internally */ }
+    get trueTier() { return this._trueTier || 'common'; }
+
+    _bind() {
+      if (this._bound) return;
+      this._bound = true;
+      this.addEventListener('click', () => this._tap());
+      this.addEventListener('keydown', (e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('a')) { e.preventDefault(); this._tap(); }
+      });
+      let sx = null;
+      this.addEventListener('pointerdown', (e) => { sx = e.clientX; });
+      this.addEventListener('pointerup', (e) => {
+        if (sx !== null && Math.abs(e.clientX - sx) > 60 && this._stage === 'mystery') this._unlock();
+        sx = null;
+      });
+    }
+
+    _tap() {
+      if (this._stage === 'mystery') {
+        const now = Date.now();
+        this._taps = [...this._taps.filter((t) => now - t < 1500), now];
+        const el = this.querySelector('.dropcard');
+        if (el) { el.classList.remove('jiggle'); void el.offsetWidth; el.classList.add('jiggle'); }
+        if (this._taps.length >= 5) this._unlock();
+        return;
+      }
+      if (this._stage === 'back') {
+        this._stage = 'common';
+        this._pop();
+        this._checkDone();
+        return;
+      }
+      const idx = tierIndex(this._stage);
+      const trueIdx = tierIndex(this.trueTier);
+      if (idx < trueIdx) {
+        this._stage = TIER_ORDER[idx + 1];
+        this._pop();
+        this._checkDone();
+      } else {
+        const el = this.querySelector('.dropcard');
+        if (el) { el.classList.remove('nudge'); void el.offsetWidth; el.classList.add('nudge'); }
+      }
+    }
+
+    _unlock() {
+      if (this._stage !== 'mystery') return;
+      this._stage = 'back';
+      const key = this.getAttribute('dropkey');
+      if (key) markDropSeen(key);
+      this._taps = [];
+      this.render();
+      this.dispatchEvent(new CustomEvent('dropcard:seen', { bubbles: true, composed: true }));
+    }
+
+    _pop() {
+      this.render();
+      const el = this.querySelector('.dropcard');
+      if (el) el.classList.add('pop');
+    }
+
+    _checkDone() {
+      if (!this._done && this._stage === this.trueTier) {
+        this._done = true;
+        this.dispatchEvent(new CustomEvent('dropcard:done', { bubbles: true, composed: true, detail: { tier: this.trueTier } }));
+      }
+    }
+
+    render() {
+      const g = (n) => this.getAttribute(n) || '';
+      const glow = g('glow');
+      const mini = g('mini') === '1';
+      const glowCls = glow === 'strong' ? ' glow-strong' : glow === 'weak' ? ' glow-weak' : '';
+      const miniCls = mini ? ' mini' : '';
+      if (this._stage === 'mystery') {
+        this.innerHTML = `<article class="dropcard mystery${miniCls}" role="button" tabindex="0" aria-label="Mystery drop. Tap rapidly or swipe to reveal.">
+          <p class="wild-header">A wild ${esc(g('company'))} appeared!</p>
+          <div class="mystery-q">?</div>
+          <p class="dropcard-hint">spam-tap or swipe to unlock</p>
+        </article>`;
+        return;
+      }
+      if (this._stage === 'back') {
+        this.innerHTML = `<article class="dropcard back${miniCls}" role="button" tabindex="0" aria-label="Face-down drop card. Tap to reveal.">
+          <div class="card-back-pattern"></div>
+          <p class="dropcard-hint">tap to reveal</p>
+        </article>`;
+        return;
+      }
+      const stage = this._stage;
+      const isTrue = stage === this.trueTier;
+      const reason = g('skipreason') ? `<p class="skip-reason">Skipped: ${esc(g('skipreason'))}</p>` : '';
+      const full = isTrue ? `
+        <div class="dropcard-logo"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img></div>
+        <p class="dropcard-loc">${esc(g('location'))}</p>
+        ${g('comp') ? `<p class="dropcard-comp">${esc(g('comp'))}</p>` : ''}
+        <div class="dropcard-badges"><status-pill kind="sudo" value="${esc(g('status'))}"></status-pill><shiny-badge comp="${esc(g('comp'))}"></shiny-badge></div>
+        ${reason}
+        ${g('url') ? `<a class="dropcard-link" href="${esc(g('url'))}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()">Open posting</a>` : ''}`
+        : '';
+      const nextHint = !isTrue ? `<p class="dropcard-hint">tap to upgrade</p>` : `<p class="dropcard-hint done">maxed</p>`;
+      this.innerHTML = `<article class="dropcard t-${stage}${glowCls}${miniCls}" role="button" tabindex="0" aria-label="${esc(g('title'))} at ${esc(g('company'))}, ${RARITY_LABEL[stage]} tier.">
+        <span class="rarity ${stage}">${RARITY_LABEL[stage]}</span>
+        <h4>${esc(g('title'))}</h4>
+        <p class="dropcard-company">${esc(g('company'))}</p>
+        ${full}
+        ${nextHint}
+      </article>`;
+    }
+  }
+
+  class PackOpening extends HTMLElement {
+    connectedCallback() {
+      this._items = [];
+      this._doneKeys = new Set();
+      this._expected = 0;
+      this._claimed = false;
+      this._closed = false;
+      this.render();
+      this._wire();
+    }
+    set items(val) {
+      this._items = Array.isArray(val) ? val : [];
+      this.render();
+    }
+    get items() { return this._items; }
+
+    _wire() {
+      this.addEventListener('click', (e) => {
+        if (e.target.closest('.pack-close')) return this.close(false);
+        if (e.target === this.querySelector('.pack-overlay')) return this.close(false);
+        const claim = e.target.closest('.pack-claim');
+        if (claim) return this.claim();
+        const combo = e.target.closest('.double-combo');
+        if (combo) return this._splitDouble(combo);
+      });
+      this.addEventListener('dropcard:done', (e) => {
+        const card = e.target;
+        const key = card.getAttribute && card.getAttribute('dropkey');
+        if (key && !this._doneKeys.has(key)) {
+          this._doneKeys.add(key);
+          this._checkComplete();
+        }
+      });
+      document.addEventListener('keydown', this._escHandler = (e) => {
+        if (e.key === 'Escape') this.close(false);
+      });
+      document.body.style.overflow = 'hidden';
+    }
+
+    _cardAttrs(d) {
+      return `company="${esc(d.company || '')}" title="${esc(d.title || '')}" location="${esc(d.location || '')}" type="${esc(d.type || '')}" comp="${esc(d.comp || '')}" status="${esc(d.status || 'pending')}" skipreason="${esc(d.skipReason || '')}" url="${esc(d.url || '')}" dropkey="${esc(dropKey(d))}" mystery="${(!seenDrops().has(dropKey(d))) ? '1' : '0'}" glow="${esc(d.glow || '')}"`;
+    }
+
+    _expectedCount() {
+      let n = 0;
+      this._items.forEach((it) => { n += it.kind === 'double' ? 2 : 1; });
+      return n;
+    }
+
+    render() {
+      if (this._closed) return;
+      const items = this._items;
+      this._expected = this._expectedCount();
+      const total = items.reduce((n, it) => n + (it.kind === 'double' ? it.drops.length : 1), 0);
+      let cards = '';
+      items.forEach((it, i) => {
+        if (it.kind === 'double') {
+          const [a, b] = it.drops;
+          const anyMystery = [a, b].some((d) => !seenDrops().has(dropKey(d)));
+          cards += `<div class="double-wrap" data-double="${i}">
+            <div class="double-combo${anyMystery ? ' mystery' : ''}" role="button" tabindex="0" aria-label="Double drop from ${esc(a.company || '')}. Tap to split.">
+              ${anyMystery ? `<p class="wild-header">A wild ${esc(a.company || '')} appeared!</p><div class="mystery-q">2?</div><p class="dropcard-hint">spam-tap or swipe to unlock</p>`
+                : `<div class="card-back-pattern"></div><p class="double-label">2-in-1 drop</p><p class="dropcard-hint">tap to split</p>`}
+            </div>
+          </div>`;
+        } else {
+          cards += `<drop-card ${this._cardAttrs(it.drop)}></drop-card>`;
+        }
+      });
+      this.innerHTML = `<div class="pack-overlay">
+        <div class="pack-modal" role="dialog" aria-modal="true" aria-label="Today's Drop Pack">
+          <div class="pack-head">
+            <div><p class="eyebrow">ZERO2SUDO</p><h2>Today's Drop Pack</h2>
+            <p class="pack-sub">${total} drop${total === 1 ? '' : 's'} · tap cards to reveal and upgrade</p></div>
+            <button class="pack-close icon-btn" aria-label="Close pack">x</button>
+          </div>
+          <div class="pack-row">${cards || '<p class="empty">No drops today.</p>'}</div>
+          <div class="pack-foot" hidden>
+            <p class="pack-summary"></p>
+            <button class="pack-claim">Claim +25 XP</button>
+          </div>
+        </div>
+      </div>`;
+      if (this._doneKeys.size >= this._expected && this._expected > 0) this._showComplete();
+    }
+
+    _splitDouble(comboEl) {
+      const wrap = comboEl.closest('.double-wrap');
+      const idx = Number(wrap.dataset.double);
+      const it = this._items[idx];
+      if (!it || it.kind !== 'double') return;
+      const [a, b] = it.drops;
+      [a, b].forEach((d) => markDropSeen(dropKey(d)));
+      const anyMystery = comboEl.classList.contains('mystery');
+      const mk = (d) => {
+        const el = document.createElement('drop-card');
+        const tmp = document.createElement('div');
+        tmp.innerHTML = `<drop-card ${this._cardAttrs(d)}></drop-card>`;
+        const card = tmp.firstChild;
+        card.setAttribute('mini', '1');
+        if (anyMystery) card.setAttribute('mystery', '0');
+        return card;
+      };
+      const split = document.createElement('div');
+      split.className = 'double-split';
+      split.appendChild(mk(a));
+      split.appendChild(mk(b));
+      wrap.replaceWith(split);
+      this.dispatchEvent(new CustomEvent('dropcard:seen', { bubbles: true, composed: true }));
+    }
+
+    _checkComplete() {
+      if (this._doneKeys.size >= this._expected && this._expected > 0) this._showComplete();
+    }
+
+    _showComplete() {
+      const foot = this.querySelector('.pack-foot');
+      if (!foot || this._claimed) return;
+      const counts = {};
+      this.querySelectorAll('drop-card').forEach((c) => {
+        const t = (c.trueTier || 'common');
+        counts[t] = (counts[t] || 0) + 1;
+      });
+      const parts = TIER_ORDER.slice().reverse()
+        .filter((t) => counts[t])
+        .map((t) => `${counts[t]} ${RARITY_LABEL[t]}`);
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      foot.querySelector('.pack-summary').textContent = `${total} drop${total === 1 ? '' : 's'} revealed${parts.length ? ': ' + parts.join(' · ') : ''}`;
+      foot.hidden = false;
+    }
+
+    claim() {
+      if (this._claimed) return;
+      this._claimed = true;
+      addXp(25);
+      recordStreakDay();
+      document.dispatchEvent(new Event('jb:hud'));
+      const btn = this.querySelector('.pack-claim');
+      if (btn) { btn.textContent = '+25 XP claimed'; btn.disabled = true; }
+      setTimeout(() => this.close(true), 650);
+    }
+
+    close(claimed) {
+      if (this._closed) return;
+      this._closed = true;
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', this._escHandler);
+      const key = `job-signal-pack-${dayStamp()}`;
+      try { localStorage.setItem(key, '1'); } catch {}
+      this.dispatchEvent(new CustomEvent('pack:closed', { bubbles: true, composed: true, detail: { claimed: !!claimed } }));
+      this.remove();
+    }
+  }
+
   customElements.define('logo-img', LogoImg);
   customElements.define('status-pill', StatusPill);
   customElements.define('rarity-badge', RarityBadge);
@@ -278,6 +581,8 @@
   customElements.define('drop-entry', DropEntry);
   customElements.define('xp-hud', XpHud);
   customElements.define('proc-card', ProcCard);
+  customElements.define('drop-card', DropCard);
+  customElements.define('pack-opening', PackOpening);
 
   document.addEventListener('jb:logos', () => {
     document.querySelectorAll('logo-img').forEach((el) => el.render());
