@@ -18,9 +18,19 @@
     <main>
       <header><div><p class="eyebrow">US SOFTWARE ENGINEERING</p><h1>Job signal board</h1><p class="subhead">A selective inbox for systems, data, ML infrastructure, and high-leverage roles.</p></div><p id="updated"></p></header>
       <section class="controls"><input id="search" type="search" placeholder="Filter company, role, or domain"><select id="type-filter" aria-label="Employment type"><option value="">All roles</option><option value="FT">Full-time</option><option value="Internship">Internships</option></select><p id="summary"></p></section>
-      <div class="tabs" role="tablist" aria-label="Job dashboard"><button role="tab" aria-selected="true" aria-controls="daily-board">Daily Board</button><button role="tab" aria-selected="false" aria-controls="auto-tracker">Auto Tracker</button><button role="tab" aria-selected="false" aria-controls="referrals">Referrals</button><button role="tab" aria-selected="false" aria-controls="story-drops">Story Drops</button></div>
+      <div class="tabs" role="tablist" aria-label="Job dashboard"><button role="tab" aria-selected="true" aria-controls="daily-board">Daily Board</button><button role="tab" aria-selected="false" aria-controls="auto-tracker">Auto Tracker</button><button role="tab" aria-selected="false" aria-controls="referrals">Referrals</button></div>
       <section id="daily-board" role="tabpanel">
         <p class="panel-note">Your inbox for this run. Opening an application moves it to Auto Tracker. Older source results are labeled so freshness is never implied.</p>
+        <section class="board-section" id="sudo-section">
+          <div class="section-heading"><p class="eyebrow">ZERO2SUDO</p><h2>Story Drops</h2></div>
+          <details class="sudo-block" id="sudo-block">
+            <summary class="sudo-summary">
+              <div id="sudo-collapsed"></div>
+              <span class="sudo-hint">Expand for full details and skipped roles</span>
+            </summary>
+            <div id="sudo-full" class="sudo-full"></div>
+          </details>
+        </section>
         <section class="board-section"><div class="section-heading"><p class="eyebrow">FULL-TIME</p><h2>New-grad & early-career roles</h2></div><div id="full-time-grid" class="grid"></div></section>
         <section class="board-section"><div class="section-heading"><p class="eyebrow">INTERNSHIPS</p><h2>Specialization opportunities</h2></div><div id="internship-grid" class="grid"></div></section>
       </section>
@@ -70,22 +80,6 @@
           <div class="section-heading"><p class="eyebrow">TEMPLATES</p><h2>Copy paste messages</h2></div>
           <p class="panel-note">Pick the path, copy, fill in the brackets, send.</p>
           <div id="templates" class="grid"></div>
-        </section>
-      </section>
-      <section id="story-drops" role="tabpanel" hidden>
-        <p class="panel-note">Every drop from @zero2sudo's stories, logged daily. Added means it cleared your bar and is on the Daily Board. Pending means it still needs verification. Skipped shows the reason so you can second-guess me.</p>
-        <p class="panel-note" id="drops-updated"></p>
-        <section class="board-section">
-          <div class="section-heading"><p class="eyebrow">ADDED</p><h2>On your board</h2></div>
-          <div id="drops-added" class="grid"></div>
-        </section>
-        <section class="board-section">
-          <div class="section-heading"><p class="eyebrow">PENDING</p><h2>Awaiting verification</h2></div>
-          <div id="drops-pending" class="grid"></div>
-        </section>
-        <section class="board-section">
-          <div class="section-heading"><p class="eyebrow">SKIPPED</p><h2>Did not clear the bar</h2></div>
-          <div id="drops-skipped" class="grid"></div>
         </section>
       </section>
     </main>
