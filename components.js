@@ -1,9 +1,13 @@
 /* Job Signal Board — reusable Web Components.
    Light DOM, dependency-free, presentation only: never touches data files.
    Shared helpers and the gamification layer live on window.JB so app.js
-   and the components stay in sync. All localStorage keys are unchanged. */
+   and the components stay in sync. All client state goes through the
+   centralized store (store.js, loaded first); no direct localStorage
+   access remains in this file. */
 (function () {
   'use strict';
+
+  const store = () => window.JB.store;
 
   const esc = (value) => String(value === undefined || value === null ? '' : value)
     .replace(/[&<>'"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[ch]);
@@ -48,9 +52,7 @@
     return max;
   };
 
-  /* ---------- XP + levels (localStorage, per-role max milestones) ---------- */
-  const XP_KEY = 'job-signal-xp';
-  const XP_AWARDS_KEY = 'job-signal-xp-awards';
+  /* ---------- XP + levels (store-backed, per-role max milestones) ---------- */
   const XP_BY_STATUS = { New: 0, Applied: 50, OA: 100, 'Phone Screen': 250, Interview: 250, Onsite: 500, Offer: 1000, Rejected: 0, Withdrawn: 0 };
   const LEVELS = [
     { min: 0, title: 'Resume Rookie' },
@@ -59,21 +61,22 @@
     { min: 1200, title: 'Onsite Warrior' },
     { min: 2500, title: 'Offer Collector' },
   ];
-  const getXp = () => Number(localStorage.getItem(XP_KEY) || 0);
+  const getXp = () => Number(store().get('progress.xp') || 0);
   const addXp = (n) => {
     const v = getXp() + n;
-    localStorage.setItem(XP_KEY, String(v));
+    store().set('progress.xp', v);
     return v;
   };
-  const getXpAwards = () => { try { return JSON.parse(localStorage.getItem(XP_AWARDS_KEY) || '{}'); } catch { return {}; } };
+  const getXpAwards = () => store().get('progress.xpAwards') || {};
   const awardXpForStatus = (roleId, status) => {
     const target = XP_BY_STATUS[status] || 0;
-    const awards = getXpAwards();
-    const prev = awards[roleId] || 0;
+    const prev = getXpAwards()[roleId] || 0;
     if (target > prev) {
-      localStorage.setItem(XP_KEY, String(getXp() + (target - prev)));
-      awards[roleId] = target;
-      localStorage.setItem(XP_AWARDS_KEY, JSON.stringify(awards));
+      store().update('progress', (p) => {
+        p.xp = (p.xp || 0) + (target - prev);
+        p.xpAwards[roleId] = target;
+        return p;
+      });
     }
   };
   const levelFor = (xp) => {
@@ -86,21 +89,18 @@
     return { lvl, next };
   };
 
-  /* ---------- Streaks: consecutive days with tracker activity ---------- */
-  const STREAK_KEY = 'job-signal-streak-days';
+  /* ---------- Streaks: consecutive days with tracker activity (store-backed) ---------- */
   const dayStamp = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const recordStreakDay = () => {
     const today = dayStamp();
-    let days;
-    try { days = JSON.parse(localStorage.getItem(STREAK_KEY) || '[]'); } catch { days = []; }
-    if (!days.includes(today)) {
-      days.push(today);
-      localStorage.setItem(STREAK_KEY, JSON.stringify(days.slice(-90)));
-    }
+    store().update('progress.streakDays', (days) => {
+      days = Array.isArray(days) ? days : [];
+      if (!days.includes(today)) days.push(today);
+      return days.slice(-90);
+    });
   };
   const streakCount = () => {
-    let days;
-    try { days = new Set(JSON.parse(localStorage.getItem(STREAK_KEY) || '[]')); } catch { return 0; }
+    const days = new Set(store().get('progress.streakDays') || []);
     const d = new Date();
     if (!days.has(dayStamp(d))) d.setDate(d.getDate() - 1);
     let count = 0;
@@ -108,10 +108,17 @@
     return count;
   };
 
-  /* ---------- Wild encounters: unseen story drops ---------- */
-  const SEEN_DROPS_KEY = 'job-signal-seen-drops';
+  /* ---------- Wild encounters: unseen story drops (store-backed) ---------- */
+  const SEEN_DROPS_KEY = 'job-signal-seen-drops'; // legacy key, kept for reference only
   const dropKey = (d) => `${d.dateSeen}|${d.company}|${d.title}`;
-  const seenDrops = () => { try { return new Set(JSON.parse(localStorage.getItem(SEEN_DROPS_KEY) || '[]')); } catch { return new Set(); } };
+  const seenDrops = () => new Set(store().get('drops.seenDropIds') || []);
+  const markDropSeen = (key) => {
+    store().update('drops.seenDropIds', (ids) => {
+      ids = Array.isArray(ids) ? ids : [];
+      if (key && !ids.includes(key)) ids.push(key);
+      return ids;
+    });
+  };
 
   const JB = {
     esc, normCompany,
@@ -119,7 +126,7 @@
     TIER_ORDER, tierIndex,
     rarityOf, maxCompValue,
     getXp, addXp, awardXpForStatus, levelFor, recordStreakDay, streakCount, dayStamp,
-    dropKey, seenDrops, SEEN_DROPS_KEY,
+    dropKey, seenDrops, markDropSeen, SEEN_DROPS_KEY,
     logoFallback(img) {
       const company = img.getAttribute('data-company') || '';
       const cls = img.getAttribute('data-cls') || 'company-logo';
@@ -131,7 +138,6 @@
       img.replaceWith(span);
     },
   };
-  window.JB = JB;
 
   /* ================= Components ================= */
 
@@ -285,7 +291,8 @@
     connectedCallback() {
       if (!this.dataset.bound) {
         this.dataset.bound = '1';
-        document.addEventListener('jb:hud', () => this.render());
+        // Re-render whenever progress changes; replaces the old jb:hud event.
+        store().subscribe('progress', () => this.render());
       }
       this.render();
     }
@@ -331,12 +338,6 @@
      unlocked by spam-tapping or swiping. Presentation only; all state in
      localStorage. Emits bubbling 'dropcard:done' when a card hits its true
      tier, and 'dropcard:seen' when a mystery is unlocked. */
-
-  const markDropSeen = (key) => {
-    const seen = seenDrops();
-    seen.add(key);
-    localStorage.setItem(SEEN_DROPS_KEY, JSON.stringify([...seen]));
-  };
 
   class DropCard extends HTMLElement {
     static get observedAttributes() {
@@ -470,6 +471,7 @@
       this._expected = 0;
       this._claimed = false;
       this._closed = false;
+      store().set('ui.packOpen', true);
       this.render();
       this._wire();
     }
@@ -597,9 +599,8 @@
     claim() {
       if (this._claimed) return;
       this._claimed = true;
-      addXp(25);
+      addXp(25); // store subscription refreshes the HUD automatically
       recordStreakDay();
-      document.dispatchEvent(new Event('jb:hud'));
       const btn = this.querySelector('.pack-claim');
       if (btn) { btn.textContent = '+25 XP claimed'; btn.disabled = true; }
       setTimeout(() => this.close(true), 650);
@@ -610,8 +611,8 @@
       this._closed = true;
       document.body.style.overflow = '';
       document.removeEventListener('keydown', this._escHandler);
-      const key = `job-signal-pack-${dayStamp()}`;
-      try { localStorage.setItem(key, '1'); } catch {}
+      store().set('ui.packOpen', false);
+      store().set(`drops.packStamps.${dayStamp()}`, true);
       this.dispatchEvent(new CustomEvent('pack:closed', { bubbles: true, composed: true, detail: { claimed: !!claimed } }));
       this.remove();
     }
@@ -628,6 +629,10 @@
   customElements.define('proc-card', ProcCard);
   customElements.define('drop-card', DropCard);
   customElements.define('pack-opening', PackOpening);
+
+  // store.js runs first and attaches window.JB.store; merge instead of
+  // overwriting so the store survives.
+  window.JB = Object.assign(window.JB || {}, JB);
 
   document.addEventListener('jb:logos', () => {
     document.querySelectorAll('logo-img').forEach((el) => el.render());
