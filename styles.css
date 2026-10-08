@@ -190,3 +190,93 @@ span.drop-row-logo.logo-fallback { font-size: 1rem; height: 30px; width: 30px; }
   .drop-row-title { flex: 1 1 100%; order: 2; white-space: normal; }
   .drop-row-details { padding-left: 12px; }
 }
+
+/* ================= Card-game redesign: tier hues, full-screen pack, gamified dashboard ================= */
+/* Tier hues: Common green, Rare blue, Epic purple, Legendary yellow, Mythic red. */
+@property --tier-g1 { syntax: '<color>'; inherits: true; initial-value: #58B368; }
+@property --tier-g2 { syntax: '<color>'; inherits: true; initial-value: #2c6e3f; }
+.t-common { --tier: #58B368; --tier-g1: #58B368; --tier-g2: #2c6e3f; --tier-glow: rgba(88,179,104,.5); --tier-ink: #0e2a14; }
+.t-rare { --tier: #4EA8DE; --tier-g1: #4EA8DE; --tier-g2: #2456a0; --tier-glow: rgba(78,168,222,.5); --tier-ink: #ffffff; }
+.t-epic { --tier: #9B5DE5; --tier-g1: #9B5DE5; --tier-g2: #5f2fb0; --tier-glow: rgba(155,93,229,.55); --tier-ink: #ffffff; }
+.t-legendary { --tier: #FFC53D; --tier-g1: #FFC53D; --tier-g2: #b57e0e; --tier-glow: rgba(255,197,61,.55); --tier-ink: #2a1e00; }
+.t-mythic { --tier: #E3350D; --tier-g1: #E3350D; --tier-g2: #7e1c05; --tier-glow: rgba(227,53,13,.6); --tier-ink: #ffffff; }
+
+/* Rarity pills in the new tier hues. */
+.rarity.common { background: #58B368; color: #0e2a14; }
+.rarity.rare { background: #4EA8DE; color: #fff; }
+.rarity.epic { background: #9B5DE5; color: #fff; }
+.rarity.legendary { animation: shimmer 2.6s linear infinite; background: linear-gradient(110deg, #FFC53D 20%, #fff3c4 40%, #FFC53D 60%); background-size: 200% 100%; box-shadow: 0 0 10px rgba(255,197,61,.45); color: #2a1e00; }
+.rarity.mythic { animation: mythic-shimmer 2.2s linear infinite; background: linear-gradient(110deg, #E3350D 20%, #ff8a5c 40%, #E3350D 60%); background-size: 200% 100%; border: 0; color: #fff; }
+
+/* Hue growth: card top gradient + border + glow all shift with the tier, animated. */
+.dropcard { transition: border-color .5s ease, box-shadow .5s ease; }
+.dropcard.t-common, .dropcard.t-rare, .dropcard.t-epic, .dropcard.t-legendary, .dropcard.t-mythic { border-color: var(--tier); }
+.dropcard.t-common { box-shadow: 0 0 16px var(--tier-glow); }
+.dropcard.t-rare { box-shadow: 0 0 20px var(--tier-glow); }
+.dropcard.t-epic { box-shadow: 0 0 22px var(--tier-glow); }
+.dropcard.t-legendary { box-shadow: 0 0 26px var(--tier-glow); }
+.dropcard.t-mythic { animation: mythic-pulse 2s ease-in-out infinite; box-shadow: 0 0 22px var(--tier-glow); }
+.dropcard-top { background: linear-gradient(135deg, var(--tier-g1), var(--tier-g2)); transition: --tier-g1 .5s ease, --tier-g2 .5s ease; }
+
+/* Pack opening: full-screen takeover. */
+.pack-overlay { padding: 0; }
+.pack-modal { border-left: 0; border-radius: 0; border-right: 0; height: 100dvh; max-height: none; max-width: none; width: 100vw; }
+.pack-modal::before { border-radius: 0; }
+.pack-head { align-items: center; flex-direction: column; gap: 6px; text-align: center; }
+.pack-head h2 { font-size: clamp(1.5rem, 4.5vw, 2.4rem); letter-spacing: .22em; margin: 6px 0 4px; text-shadow: 0 0 30px rgba(255, 203, 5, .35); text-transform: uppercase; }
+.pack-head .eyebrow { letter-spacing: .3em; }
+.pack-head .pack-close { position: absolute; right: 18px; top: 18px; }
+.pack-sub { font-size: .9rem; }
+.pack-row { align-items: center; flex: 1; justify-content: flex-start; padding: 24px; }
+.pack-foot { border-top: 1px solid #2a3443; margin: 0; padding: 18px 24px calc(18px + env(safe-area-inset-bottom)); }
+
+/* Slim zero2sudo banner strip. */
+.sudo-strip { margin-top: 22px; }
+.sudo-strip .sudo-block { padding: 0; }
+.sudo-strip .sudo-summary { align-items: center; cursor: pointer; display: flex; gap: 12px; list-style: none; padding: 10px 16px; }
+.sudo-strip .sudo-summary::-webkit-details-marker { display: none; }
+.sudo-strip-tag { color: #FFCB05; flex-shrink: 0; font-size: .68rem; font-weight: 800; letter-spacing: .14em; }
+.sudo-banner-wrap { flex: 1; min-width: 0; }
+.sudo-banner { align-items: center; color: #c6ced9; display: flex; font-size: .88rem; gap: 10px; overflow: hidden; white-space: nowrap; }
+.sudo-banner strong { color: #edf0f6; }
+.sudo-banner-counts { color: #8e99a9; }
+.sudo-banner-more { color: #8e99a9; font-size: .78rem; }
+.rarity-dots { display: inline-flex; gap: 5px; }
+.rdot { border-radius: 50%; display: inline-block; height: 10px; width: 10px; }
+.rdot.common { background: #58B368; box-shadow: 0 0 6px rgba(88,179,104,.8); }
+.rdot.rare { background: #4EA8DE; box-shadow: 0 0 6px rgba(78,168,222,.8); }
+.rdot.epic { background: #9B5DE5; box-shadow: 0 0 6px rgba(155,93,229,.8); }
+.rdot.legendary { background: #FFC53D; box-shadow: 0 0 6px rgba(255,197,61,.8); }
+.rdot.mythic { background: #E3350D; box-shadow: 0 0 6px rgba(227,53,13,.8); }
+.sudo-strip .pack-replay-btn { flex-shrink: 0; font-size: .78rem; min-height: 36px; padding: 8px 16px; }
+.sudo-caret { color: #8e99a9; flex-shrink: 0; font-size: .8rem; transition: transform .25s ease; }
+.sudo-strip .sudo-block[open] .sudo-caret { transform: rotate(180deg); }
+.sudo-strip .sudo-full { border-top: 1px solid #2a3443; margin-top: 0; padding: 16px; }
+
+/* Gamified dashboard role cards: split layout, tier glow, springy hover. */
+.game-card { background: #0B0B0E; border: 2px solid var(--tier); border-radius: 20px; box-shadow: 0 0 18px var(--tier-glow); display: flex; flex-direction: column; overflow: hidden; padding: 0; transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s ease, border-color .35s ease; }
+.game-card:hover { box-shadow: 0 14px 34px var(--tier-glow), 0 0 26px var(--tier-glow); transform: translateY(-6px); }
+.game-top { background: linear-gradient(135deg, var(--tier-g1), var(--tier-g2)); padding: 20px 16px 34px; position: relative; text-align: center; }
+.game-art { align-items: center; background: #fff; border-radius: 50%; box-shadow: 0 8px 22px rgba(0,0,0,.35); display: flex; height: 76px; justify-content: center; margin: 0 auto; width: 76px; }
+.game-art .company-logo { height: 50px; width: 50px; }
+.game-art .logo-fallback { border-radius: 50%; font-size: 1.7rem; height: 50px; width: 50px; }
+.game-top .rarity { left: 50%; position: absolute; top: 10px; transform: translateX(-50%); }
+.game-sheet { background: #0B0B0E; border-radius: 24px 24px 0 0; display: flex; flex: 1; flex-direction: column; gap: 10px; margin-top: -22px; padding: 18px 16px 16px; position: relative; }
+.game-sheet .eyebrow { color: var(--tier); }
+.game-sheet h3 { color: #fff; }
+.game-sheet .company { color: #b9c2cf; }
+.fit-bullets { color: #c6ced9; display: flex; flex-direction: column; font-size: .88rem; gap: 6px; line-height: 1.45; margin: 0; padding-left: 18px; }
+.fit-bullets li::marker { color: var(--tier, #9B5DE5); font-weight: 800; }
+.game-foot { align-items: center; display: flex; gap: 10px; margin-top: auto; padding-top: 8px; }
+.game-foot a { background: var(--tier); border-radius: 999px; color: var(--tier-ink); flex: 1; font-weight: 800; padding: 12px; text-align: center; transition: filter .2s ease, transform .2s cubic-bezier(.34,1.56,.64,1); }
+.game-foot a:hover { filter: brightness(1.12); transform: scale(1.02); }
+
+/* Procs cards: tier color accents, pipeline layout untouched. */
+.proc-card { transition: border-color .4s ease, box-shadow .4s ease; }
+.proc-card.t-common, .proc-card.t-rare, .proc-card.t-epic, .proc-card.t-legendary, .proc-card.t-mythic { border-color: var(--tier); box-shadow: 0 0 10px var(--tier-glow); }
+.proc-card.stale { border-color: #f6d67c; box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rarity.legendary { animation: none; }
+  .game-card, .game-card:hover, .game-foot a { transform: none; transition: none; }
+}
