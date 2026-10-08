@@ -7,3 +7,20 @@
 .skip-reason { color: #f6d67c; font-size: .85rem; margin: 0; }
 .drop-note { color: #8e99a9; font-size: .85rem; margin: 0; }
 .no-link { align-self: flex-start; }
+.sudo-block { background: #171c24; border: 1px solid #2a3443; border-radius: 14px; padding: 18px 20px; }
+.sudo-block > summary { cursor: pointer; list-style: none; }
+.sudo-block > summary::-webkit-details-marker { display: none; }
+.sudo-date-group { margin-bottom: 14px; }
+.sudo-date-group:last-child { margin-bottom: 0; }
+.sudo-date-summary { color: #edf0f6; margin: 0 0 10px; }
+.sudo-compact { display: flex; flex-direction: column; gap: 7px; margin-bottom: 4px; }
+.sudo-line { align-items: center; color: #c6ced9; display: flex; font-size: .9rem; gap: 10px; line-height: 1.4; }
+.pill { border: 1px solid; border-radius: 999px; font-size: .68rem; font-weight: 800; padding: 3px 9px; white-space: nowrap; }
+.pill.added { border-color: #9cffda; color: #9cffda; }
+.pill.pending { border-color: #f6d67c; color: #f6d67c; }
+.pill.skipped { border-color: #8e99a9; color: #8e99a9; }
+.sudo-hint { color: #8e99a9; display: inline-block; font-size: .8rem; margin-top: 12px; }
+.sudo-block[open] .sudo-hint { display: none; }
+.sudo-full { border-top: 1px solid #2a3443; margin-top: 8px; padding-top: 18px; }
+.logo-fallback { align-items: center; background: #2a3443; border-radius: 12px; color: #9cffda; display: inline-flex; flex-shrink: 0; font-size: 1.5rem; font-weight: 800; height: 56px; justify-content: center; width: 56px; }
+@media (max-width: 650px) { .logo-fallback { height: 48px; width: 48px; } .sudo-line { font-size: .85rem; } }
