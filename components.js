@@ -303,8 +303,8 @@
       this.innerHTML = `<div class="hud-row">`
         + `<span class="hud-level">${esc(lvl.title)}</span>`
         + `<div class="xp-bar" role="progressbar" aria-valuenow="${xp}" aria-valuemin="0" aria-label="Experience points"><div class="xp-fill" style="width:${pct}%"></div></div>`
-        + `<span class="hud-xp">${xp} XP</span>`
-        + `<span class="hud-streak" title="Consecutive active days">🔥 ${streakCount()}</span>`
+        + `<span class="hud-xp coin-pill">${xp} XP<span class="coin-plus" aria-hidden="true">+</span></span>`
+        + `<span class="hud-streak coin-pill gold" title="Consecutive active days">🔥 ${streakCount()}</span>`
         + `</div>`
         + (next
           ? `<p class="hud-next">${next.min - xp} XP to ${esc(next.title)}</p>`
@@ -445,32 +445,47 @@
       const stage = this._stage;
       const isTrue = stage === this.trueTier;
       const reason = g('skipreason') ? `<p class="skip-reason">Skipped: ${esc(g('skipreason'))}</p>` : '';
+      // Figma "Poke Breed" split card: teal-gradient top with the logo in a
+      // white circular badge, black bottom sheet with stat rows.
       const full = isTrue ? `
-        <div class="dropcard-logo"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img></div>
-        <p class="dropcard-loc">${esc(g('location'))}</p>
-        ${g('comp') ? `<p class="dropcard-comp">${esc(g('comp'))}</p>` : ''}
-        <div class="dropcard-badges"><status-pill kind="sudo" value="${esc(g('status'))}"></status-pill><shiny-badge comp="${esc(g('comp'))}"></shiny-badge></div>
-        ${reason}
-        ${g('url') ? `<a class="dropcard-link" href="${esc(g('url'))}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()">Open posting</a>` : ''}`
+          <div class="dropcard-stats">
+            <div class="stat-row"><span>Location</span><span>${esc(g('location'))}</span></div>
+            <div class="stat-row"><span>Track</span><span>${esc(g('type'))}</span></div>
+            ${g('comp') ? `<div class="stat-row"><span>Comp</span><span>${esc(g('comp'))}</span></div>` : ''}
+          </div>
+          <div class="dropcard-badges"><status-pill kind="sudo" value="${esc(g('status'))}"></status-pill><shiny-badge comp="${esc(g('comp'))}"></shiny-badge></div>
+          ${reason}
+          ${g('url') ? `<a class="dropcard-link" href="${esc(g('url'))}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()">Open posting</a>` : ''}`
         : '';
       const nextHint = !isTrue ? `<p class="dropcard-hint">tap to upgrade</p>` : `<p class="dropcard-hint done">maxed</p>`;
       this.innerHTML = `<article class="dropcard t-${stage}${glowCls}${miniCls}" role="button" tabindex="0" aria-label="${esc(g('title'))} at ${esc(g('company'))}, ${RARITY_LABEL[stage]} tier.">
-        <span class="rarity ${stage}">${RARITY_LABEL[stage]}</span>
-        <h4>${esc(g('title'))}</h4>
-        <p class="dropcard-company">${esc(g('company'))}</p>
-        ${full}
-        ${nextHint}
+        <div class="dropcard-top">
+          <div class="dropcard-art"><logo-img company="${esc(g('company'))}" cls="company-logo"></logo-img></div>
+          <span class="rarity ${stage}">${RARITY_LABEL[stage]}</span>
+        </div>
+        <div class="dropcard-sheet">
+          <h4>${esc(g('title'))}</h4>
+          <p class="dropcard-company">${esc(g('company'))}</p>
+          ${full}
+          ${nextHint}
+        </div>
       </article>`;
     }
   }
 
   class PackOpening extends HTMLElement {
+    // Initialized at construction (not in connectedCallback) so the `items`
+    // setter is safe to call before the element is attached — showPack() sets
+    // items and *then* appends, and the setter renders immediately.
+    _items = [];
+    _doneKeys = new Set();
+    _expected = 0;
+    _claimed = false;
+    _closed = false;
+    _wired = false;
     connectedCallback() {
-      this._items = [];
-      this._doneKeys = new Set();
-      this._expected = 0;
-      this._claimed = false;
-      this._closed = false;
+      if (this._wired) return;
+      this._wired = true;
       store().set('ui.packOpen', true);
       this.render();
       this._wire();
@@ -526,7 +541,7 @@
           const anyMystery = [a, b].some((d) => !seenDrops().has(dropKey(d)));
           cards += `<div class="double-wrap" data-double="${i}">
             <div class="double-combo${anyMystery ? ' mystery' : ''}" role="button" tabindex="0" aria-label="Double drop from ${esc(a.company || '')}. Tap to split.">
-              ${anyMystery ? `<p class="wild-header">A wild ${esc(a.company || '')} appeared!</p><div class="mystery-q">2?</div><p class="dropcard-hint">spam-tap or swipe to unlock</p>`
+              ${anyMystery ? `<p class="wild-header">A wild ${esc(a.company || '')} appeared!</p><div class="mystery-q dim">2?</div><p class="dropcard-hint">spam-tap or swipe to unlock</p>`
                 : `<div class="card-back-pattern"></div><p class="double-label">2-in-1 drop</p><p class="dropcard-hint">tap to split</p>`}
             </div>
           </div>`;
