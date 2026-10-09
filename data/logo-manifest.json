@@ -46,5 +46,9 @@
   "docusign": "assets/logos/docusign.png",
   "monolithic-power-systems": "assets/logos/monolithic-power-systems.png",
   "tesla": "assets/logos/tesla.png",
-  "rocket": "assets/logos/rocket.png"
+  "rocket": "assets/logos/rocket.png",
+  "snowflake": "assets/logos/snowflake.png",
+  "aurelian": "assets/logos/aurelian.png",
+  "coinbase": "assets/logos/coinbase.png",
+  "arcesium": "assets/logos/arcesium.png"
 }
