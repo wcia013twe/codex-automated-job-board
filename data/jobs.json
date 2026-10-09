@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastRun": "2026-10-08",
+  "lastRun": "2026-10-09",
   "roles": [
     {
       "id": "doordash-software-engineer-storage-8024644",
@@ -225,21 +225,6 @@
       "sourceFreshness": "6 days ago",
       "whyItFits": "Potential applied-ML trade-up with a named AI-entities focus; verify real model ownership, retrieval, or evaluation depth.",
       "applicationUrl": "https://jobs.ashbyhq.com/evenup/19eb22cd-9540-49ed-840b-6422714413b5/application",
-      "applicationStatus": "New"
-    },
-    {
-      "id": "adobe-software-engineer-new-grad-r172083",
-      "company": "Adobe",
-      "title": "Software Engineer, University Graduate 2027",
-      "employmentType": "FT",
-      "location": "Seattle, WA; San Francisco, CA; Austin, TX; San Jose, CA; New York, NY; Lehi, UT",
-      "category": "Developer, data & AI platform",
-      "priority": "Strong Consider",
-      "postedDate": null,
-      "discoveredDate": "2026-10-06",
-      "sourceFreshness": "12 days ago",
-      "whyItFits": "Broad high-signal entry point with potential AI, data, and platform teams. Apply selectively after identifying a technically differentiated team.",
-      "applicationUrl": "https://adobe.wd5.myworkdayjobs.com/external_experienced/job/San-Jose/XMLNAME-2027-University-Graduate---Software-Engineer_R172083",
       "applicationStatus": "New"
     },
     {
@@ -654,6 +639,36 @@
       "applicationStatus": "New",
       "discoverySource": "@zero2sudo Instagram stories",
       "verifiedDate": "2026-10-08"
+    },
+    {
+      "id": "amazon-software-development-engineer-robotics-early-career-2027-10567489",
+      "company": "Amazon",
+      "title": "Software Development Engineer, ROBOTICS, Early Career - 2027",
+      "employmentType": "FT",
+      "location": "Austin, TX",
+      "category": "Robotics & distributed systems",
+      "priority": "Strong Consider",
+      "postedDate": null,
+      "discoveredDate": "2026-10-09",
+      "sourceFreshness": "posted 3 days ago",
+      "whyItFits": "Confirmed early career 2027 posting at SDE-I level, so the bar is a degree and one language, not years of experience. The robotics org builds distributed systems for fulfillment at real scale, which overlaps your systems interests, and it is a solid interview rep against the Oracle baseline.",
+      "applicationUrl": "https://www.amazon.jobs/en/jobs/10567489/software-development-engineer-robotics-early-career-2027",
+      "applicationStatus": "New"
+    },
+    {
+      "id": "tiktok-machine-learning-engineer-graduate-ecommerce-recommendation-video-2027-7686999927260105013",
+      "company": "TikTok",
+      "title": "Machine Learning Engineer Graduate (E-Commerce Recommendation Video) - 2027 Start",
+      "employmentType": "FT",
+      "location": "Seattle, WA — office location unconfirmed",
+      "category": "Ranking & recommendation systems",
+      "priority": "Skip Unless Team Fit",
+      "postedDate": null,
+      "discoveredDate": "2026-10-09",
+      "sourceFreshness": "posted 1 day ago",
+      "whyItFits": "Graduate 2027 role on the e-commerce recommendation team, which is ranking and retrieval at serious scale, right in your target lane. TikTok sits in Common on your tier list, so this one is purely about the team: the recsys work is the draw, not the brand. Investigate the team before applying.",
+      "applicationUrl": "https://lifeattiktok.com/search/7686999927260105013",
+      "applicationStatus": "New"
     }
   ]
 }
