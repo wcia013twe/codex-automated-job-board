@@ -287,6 +287,97 @@
       "status": "skipped",
       "skipReason": "Generalist SWE at mortgage lender, weak fit for infra targets",
       "note": "Seen in story tray; story could not be re-verified before session end."
+    },
+    {
+      "company": "Snowflake",
+      "title": "Software Engineer - Customer Experience Engineering",
+      "location": "Menlo Park, CA (hybrid)",
+      "type": "FT",
+      "comp": "$128K-$184K",
+      "url": null,
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Posting no longer live on evening re-check: removed from Snowflake's Ashby board (only the Sr. version remains)",
+      "note": "New-grad role posted Oct 8; link sticker pointed to jobs.ashbyhq.com. Aggregators still show a stale listing."
+    },
+    {
+      "company": "Meta",
+      "title": "Data Center Technician, Intern (info session Oct 28, 2026)",
+      "location": "Five U.S. sites (12-week paid internship)",
+      "type": "Internship",
+      "comp": null,
+      "url": "https://events.atmeta.com",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Data center technician role, not software engineering",
+      "note": "Story was an info-session/panel promo (Oct 28, 3-4pm PDT); link sticker EVENTS.ATMETA.COM."
+    },
+    {
+      "company": "Aurelian",
+      "title": "Software Engineer (New Grad)",
+      "location": "Seattle, WA (on-site)",
+      "type": "FT",
+      "comp": "$100K-$130K",
+      "url": "https://jobs.ashbyhq.com/aurelian/a2bc965f-d639-41f7-946a-67c05c22e04e",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "added",
+      "skipReason": null,
+      "note": "Verified live 2026-10-09. Early-stage AI startup (founded 2022, ~23 people) building conversational AI agents for 911 dispatch."
+    },
+    {
+      "company": "Ford",
+      "title": "Software & Embedded Engineering (Talent Pipeline) - Early Career Program, Advanced EV",
+      "location": "Palo Alto, CA",
+      "type": "FT",
+      "comp": null,
+      "url": null,
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Embedded-focused 6-month early career program; weak fit for backend/infra targets",
+      "note": "Link sticker read 'FORD ADVANCED EV SWE NEW GRAD'; full application domain not visible."
+    },
+    {
+      "company": "Coinbase",
+      "title": "Forward Deployed Engineer Intern (HR Technology)",
+      "location": "New York, NY (hybrid)",
+      "type": "Internship",
+      "comp": null,
+      "url": "https://www.coinbase.com",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Internal HR technology role, weak fit for infra targets",
+      "note": "Link sticker COINBASE.COM."
+    },
+    {
+      "company": "Arcesium",
+      "title": "Infrastructure Engineer Intern",
+      "location": "New York, NY",
+      "type": "Internship",
+      "comp": "~$120K/yr annualized",
+      "url": "https://job-boards.greenhouse.io/arcesiumllc/jobs/5257199007",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "added",
+      "skipReason": null,
+      "note": "Verified live 2026-10-09. D.E. Shaw spinoff fintech; squarely dev infra/platform lane."
+    },
+    {
+      "company": "Capstone Investment Advisors",
+      "title": "Summer 2027 - Quant Internship",
+      "location": "London",
+      "type": "Internship",
+      "comp": null,
+      "url": "https://job-boards.greenhouse.io/capstoneinvestmentadvisors/jobs/8859054002",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "London location; quant role, not SWE",
+      "note": "Link sticker 'LONDON QUANT INTERNSHIP'."
     }
   ]
 }
