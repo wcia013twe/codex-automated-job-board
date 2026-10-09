@@ -737,6 +737,40 @@
       "applicationStatus": "New",
       "discoverySource": "@zero2sudo Instagram stories",
       "verifiedDate": "2026-10-09"
+    },
+    {
+      "id": "aurelian-software-engineer-new-grad",
+      "company": "Aurelian",
+      "title": "Software Engineer (New Grad)",
+      "employmentType": "FT",
+      "location": "Seattle, WA (on-site)",
+      "category": "Applied AI and product engineering",
+      "priority": "Strong Consider",
+      "postedDate": "2026-10-08",
+      "discoveredDate": "2026-10-09",
+      "sourceFreshness": "1 day ago",
+      "whyItFits": "New-grad SWE at an early-stage Seattle startup (founded 2022, ~23 people) building conversational AI agents for 911 dispatch centers; real production AI-agent work at $100K-$130K and cheap interview optionality. Caveat: product-engineering role, not infra; early-stage startup risk.",
+      "applicationUrl": "https://jobs.ashbyhq.com/aurelian/a2bc965f-d639-41f7-946a-67c05c22e04e",
+      "applicationStatus": "New",
+      "discoverySource": "@zero2sudo Instagram stories",
+      "verifiedDate": "2026-10-09"
+    },
+    {
+      "id": "arcesium-infrastructure-engineer-intern",
+      "company": "Arcesium",
+      "title": "Infrastructure Engineer Intern",
+      "employmentType": "Internship",
+      "location": "New York, NY",
+      "category": "Cloud & developer infrastructure",
+      "priority": "Apply Now",
+      "postedDate": "2026-10-09",
+      "discoveredDate": "2026-10-09",
+      "sourceFreshness": "today",
+      "whyItFits": "Infrastructure engineering internship at Arcesium (D.E. Shaw spinoff fintech), NYC; directly in your dev infra/platform lane at ~$120K/yr annualized. A serious infra internship that clears the bar against just starting at Oracle.",
+      "applicationUrl": "https://job-boards.greenhouse.io/arcesiumllc/jobs/5257199007",
+      "applicationStatus": "New",
+      "discoverySource": "@zero2sudo Instagram stories",
+      "verifiedDate": "2026-10-09"
     }
   ]
 }
