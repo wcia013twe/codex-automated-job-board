@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-08",
+  "date": "2026-10-09",
   "source": "zero2sudo",
   "drops": [
     {
@@ -196,6 +196,97 @@
       "status": "added",
       "skipReason": null,
       "note": "Verified live 2026-10-08. Kernels, inference, compilers; Winter term available."
+    },
+    {
+      "company": "IMC",
+      "title": "Machine Learning Engineer Intern - Summer 2027",
+      "location": "New York, NY (on-site)",
+      "type": "Internship",
+      "comp": "$200K base salary (per posting)",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4962456101",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "added",
+      "skipReason": null,
+      "note": "Verified live 2026-10-09. ML systems: training/deployment of large-scale models, GPU acceleration, distributed computing. 10-week program starting June 7, 2027; targets grads Sep 2027-Jul 2028."
+    },
+    {
+      "company": "Two Sigma",
+      "title": "Software Engineering Full-Time Campus Hire (Houston)",
+      "location": "Houston, TX (in-office)",
+      "type": "FT",
+      "comp": null,
+      "url": "https://careers.twosigma.com/careers/JobDetail/Houston-Texas-United-States-Software-Engineering-Full-Time-Campus-Hire-Houston/14018",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "added",
+      "skipReason": null,
+      "note": "Verified live 2026-10-09. New-grad generalist SWE, team-matched pre-start; infra scope: distributed storage, low-latency trading systems, large-scale data ingestion."
+    },
+    {
+      "company": "Replit",
+      "title": "Software Engineering Intern - Winter 2027",
+      "location": "Foster City, CA (hybrid)",
+      "type": "Internship",
+      "comp": null,
+      "url": "https://jobs.ashbyhq.com/replit/7c3c9d29-cec2-4367-8564-eadaed165aea",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "added",
+      "skipReason": null,
+      "note": "Verified live 2026-10-09. 16-week Jan-Apr 2027 program; ship features on AI dev environment and cloud infra; evaluated for FT SWE offer. U.S. only."
+    },
+    {
+      "company": "Docusign",
+      "title": "Software Engineer Intern - Observability (Platform)",
+      "location": "Seattle, WA (hybrid)",
+      "type": "Internship",
+      "comp": "$38-45/hr",
+      "url": "https://careers.docusign.com/careers-home/jobs/30510?lang=en-us&previousLocale=en-US",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "added",
+      "skipReason": null,
+      "note": "Verified live 2026-10-09. Posted 10/08/2026. 4.5-month internship on Observability Engineering: metrics/logs/traces pipelines, Go/Java/Python on K8s (Azure/GCP), dashboards/alerts/SLO tooling."
+    },
+    {
+      "company": "Monolithic Power Systems",
+      "title": "Applications Engineering Intern",
+      "location": "San Jose, CA; Detroit, MI; Kirkland, WA",
+      "type": "Internship",
+      "comp": null,
+      "url": "https://monolithicpower.wd12.myworkdayjobs.com",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Applications engineering (customer-facing), weak fit for infra targets",
+      "note": null
+    },
+    {
+      "company": "Tesla",
+      "title": "Software Integration Engineer Intern, Service Tooling (Winter/Spring 2027)",
+      "location": "Fremont, CA",
+      "type": "Internship",
+      "comp": null,
+      "url": "https://www.tesla.com/careers",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Service tooling under Sales & Customer Support; support-adjacent, weak fit",
+      "note": "Req 286127. Seen in story tray; story could not be re-verified before session end."
+    },
+    {
+      "company": "Rocket",
+      "title": "Software Developer I",
+      "location": "Seattle, WA",
+      "type": "FT",
+      "comp": null,
+      "url": "https://quickenloans.wd5.myworkdayjobs.com",
+      "dateSeen": "2026-10-09",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Generalist SWE at mortgage lender, weak fit for infra targets",
+      "note": "Seen in story tray; story could not be re-verified before session end."
     }
   ]
 }
