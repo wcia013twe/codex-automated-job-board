@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastRun": "2026-10-09",
+  "lastRun": "2026-10-10",
   "roles": [
     {
       "id": "doordash-software-engineer-storage-8024644",
@@ -771,6 +771,66 @@
       "applicationStatus": "New",
       "discoverySource": "@zero2sudo Instagram stories",
       "verifiedDate": "2026-10-09"
+    },
+    {
+      "id": "nvidia-cpp-infrastructure-tools-new-grad-jr2027431",
+      "company": "NVIDIA",
+      "title": "C++ Software Engineer, Infrastructure Tools - New College Grad 2027",
+      "employmentType": "FT",
+      "location": "Santa Clara, CA (hybrid)",
+      "category": "Cloud & developer infrastructure",
+      "priority": "Apply Now",
+      "postedDate": null,
+      "discoveredDate": "2026-10-10",
+      "sourceFreshness": "1 day ago",
+      "whyItFits": "Legendary-tier infra role: build/release/regression tooling and CI/CD infrastructure for NVIDIA chip designers, plus distributed scheduling (LSF) and metrics pipelines. $108k-$178.25k base plus equity; applications accepted through Oct 13.",
+      "applicationUrl": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/job/US-CA-Santa-Clara/C---Software-Engineer--Infrastructure-Tools---New-College-Grad-2027_JR2027431",
+      "applicationStatus": "New"
+    },
+    {
+      "id": "stripe-software-engineer-new-grad-8128744",
+      "company": "Stripe",
+      "title": "Software Engineer, New Grad",
+      "employmentType": "FT",
+      "location": "San Francisco, CA; Seattle, WA; New York, NY",
+      "category": "Backend & financial platform",
+      "priority": "Apply Now",
+      "postedDate": null,
+      "discoveredDate": "2026-10-10",
+      "sourceFreshness": "3 days ago",
+      "whyItFits": "Stripe university new-grad pipeline across SF, Seattle, and NYC; payments infrastructure at massive scale with a listed $122.1k-$134.4k US base plus equity. Epic tier.",
+      "applicationUrl": "https://job-boards.greenhouse.io/stripe/jobs/8128744",
+      "applicationStatus": "New"
+    },
+    {
+      "id": "affirm-software-engineer-early-career-sf-8010617003",
+      "company": "Affirm",
+      "title": "Software Engineer, Early Career (SF)",
+      "employmentType": "FT",
+      "location": "San Francisco, CA",
+      "category": "Backend & financial platform",
+      "priority": "Strong Consider",
+      "postedDate": null,
+      "discoveredDate": "2026-10-10",
+      "sourceFreshness": "3 days ago",
+      "whyItFits": "SF counterpart to the NYC early-career posting already tracked; payments backend at scale. Same hiring pipeline, stronger location option.",
+      "applicationUrl": "https://job-boards.greenhouse.io/affirm/jobs/8010617003",
+      "applicationStatus": "New"
+    },
+    {
+      "id": "doordash-swe-intern-labs-8263774",
+      "company": "DoorDash",
+      "title": "Software Engineer, Intern - Labs (Summer 2027)",
+      "employmentType": "Internship",
+      "location": "San Francisco, CA",
+      "category": "Robotics & distributed systems",
+      "priority": "Apply Now",
+      "postedDate": null,
+      "discoveredDate": "2026-10-10",
+      "sourceFreshness": "2 days ago",
+      "whyItFits": "DoorDash Labs (robotics) summer intern; Legendary intern tier and a scarce lane with real conversion odds. Posted Oct 8 with a $107.4k-$158k salary band.",
+      "applicationUrl": "https://job-boards.greenhouse.io/doordashusa/jobs/8263774",
+      "applicationStatus": "New"
     }
   ]
 }
