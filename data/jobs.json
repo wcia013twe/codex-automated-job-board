@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastRun": "2026-10-10",
+  "lastRun": "2026-10-10T12:00:00-04:00",
   "roles": [
     {
       "id": "doordash-software-engineer-storage-8024644",
@@ -831,6 +831,40 @@
       "whyItFits": "DoorDash Labs (robotics) summer intern; Legendary intern tier and a scarce lane with real conversion odds. Posted Oct 8 with a $107.4k-$158k salary band.",
       "applicationUrl": "https://job-boards.greenhouse.io/doordashusa/jobs/8263774",
       "applicationStatus": "New"
+    },
+    {
+      "id": "microsoft-software-engineer-ai-ml-llm-intern",
+      "company": "Microsoft",
+      "title": "Software Engineer: AI/ML & LLM Intern",
+      "employmentType": "Internship",
+      "location": "Redmond, WA",
+      "category": "AI/ML",
+      "priority": "Apply Now",
+      "postedDate": "2026-08-04",
+      "discoveredDate": "2026-10-10",
+      "sourceFreshness": "today",
+      "whyItFits": "AI/ML & LLM software engineering internship at Microsoft (Rare tier) for Summer 2027; direct fit for your AI/ML lane and a strong credential that clears the bar against just starting at Oracle.",
+      "applicationUrl": "https://apply.careers.microsoft.com/careers/job/1970393556922929?domain=microsoft.com&hl=en",
+      "applicationStatus": "New",
+      "discoverySource": "@zero2sudo Instagram stories",
+      "verifiedDate": "2026-10-10"
+    },
+    {
+      "id": "decagon-engineering-intern-summer-2027",
+      "company": "Decagon",
+      "title": "Engineering Intern (Summer 2027)",
+      "employmentType": "Internship",
+      "location": "San Francisco, CA (in-office, 5 days/week)",
+      "category": "AI agent engineering",
+      "priority": "Strong Consider",
+      "postedDate": "2026-09-19",
+      "discoveredDate": "2026-10-10",
+      "sourceFreshness": "today",
+      "whyItFits": "Ship production AI agents for enterprise customer support (agent engineering, orchestration, infra tracks) at a hypergrowth AI startup at $2,400/week; strong LLM/agent experience that complements your Oracle AI-agents background. Caveat: in-office 5 days/week in SF.",
+      "applicationUrl": "https://jobs.ashbyhq.com/decagon/16529089-a048-4bc3-8456-3f197135e00b",
+      "applicationStatus": "New",
+      "discoverySource": "@zero2sudo Instagram stories",
+      "verifiedDate": "2026-10-10"
     }
   ]
 }
