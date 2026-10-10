@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-09",
+  "date": "2026-10-10",
   "source": "zero2sudo",
   "drops": [
     {
@@ -378,6 +378,71 @@
       "status": "skipped",
       "skipReason": "London location; quant role, not SWE",
       "note": "Link sticker 'LONDON QUANT INTERNSHIP'."
+    },
+    {
+      "company": "Microsoft",
+      "title": "Software Engineer: AI/ML & LLM Intern",
+      "location": "Redmond, WA",
+      "type": "Internship",
+      "comp": null,
+      "url": "https://apply.careers.microsoft.com/careers/job/1970393556922929?domain=microsoft.com&hl=en",
+      "dateSeen": "2026-10-10",
+      "source": "zero2sudo",
+      "status": "added",
+      "skipReason": null,
+      "note": "Story summary drop (no link sticker; links via bio/Linktree). Title/location/term corroborated via SimplifyJobs Summer2027-Internships issue #9670 (posted Aug 4, 2026, accepting applications); posting page resolves live on Microsoft careers."
+    },
+    {
+      "company": "Decagon",
+      "title": "Engineering Intern (Summer 2027)",
+      "location": "San Francisco, CA (in-office, 5 days/week)",
+      "type": "Internship",
+      "comp": "$2,400/week",
+      "url": "https://jobs.ashbyhq.com/decagon/16529089-a048-4bc3-8456-3f197135e00b",
+      "dateSeen": "2026-10-10",
+      "source": "zero2sudo",
+      "status": "added",
+      "skipReason": null,
+      "note": "Verified live via Decagon Ashby posting API on 2026-10-10. Builds production AI agents for enterprise customer support (agent engineering, orchestration, infra tracks)."
+    },
+    {
+      "company": "Amazon",
+      "title": "Applied Science / AI / Robotics (Summer 2027 internships)",
+      "location": "US (various)",
+      "type": "Internship",
+      "comp": null,
+      "url": null,
+      "dateSeen": "2026-10-10",
+      "source": "zero2sudo",
+      "status": "pending",
+      "skipReason": null,
+      "note": "Summary story mention, no link sticker. 2027 US applied-science internships recruit primarily PhD students; no MS/undergrad-eligible posting identified, so not added to the board."
+    },
+    {
+      "company": "Schonfeld",
+      "title": "Quant Internship (Summer 2027)",
+      "location": null,
+      "type": "Internship",
+      "comp": null,
+      "url": null,
+      "dateSeen": "2026-10-10",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Quant role, not SWE",
+      "note": null
+    },
+    {
+      "company": "GlobalFoundries",
+      "title": "New Grad roles",
+      "location": null,
+      "type": "FT",
+      "comp": null,
+      "url": null,
+      "dateSeen": "2026-10-10",
+      "source": "zero2sudo",
+      "status": "skipped",
+      "skipReason": "Hardware/semiconductor focus, weak fit for backend/infra targets",
+      "note": null
     }
   ]
 }
