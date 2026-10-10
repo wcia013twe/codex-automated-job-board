@@ -50,5 +50,6 @@
   "snowflake": "assets/logos/snowflake.png",
   "aurelian": "assets/logos/aurelian.png",
   "coinbase": "assets/logos/coinbase.png",
-  "arcesium": "assets/logos/arcesium.png"
+  "arcesium": "assets/logos/arcesium.png",
+  "stripe": "assets/logos/stripe.png"
 }
